@@ -109,6 +109,12 @@
       </span>
     </div>
 
+    <button id="btn-voz" onclick="alternarVoz()" title="Ativar ou desativar instruções por voz" class="w-11 h-11 rounded-full bg-[#e2b245]/20 border-2 border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center text-[#e2b245] transition-all active:scale-95">
+      <svg id="icone-voz" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+      </svg>
+    </button>
+
     <button id="btn-sol-noite" onclick="alternarTemaMapa()" title="Alternar entre Modo Noite e Modo Sol" class="w-11 h-11 rounded-full bg-[#121212]/95 border border-zinc-700 hover:border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center text-[#e2b245] transition-all active:scale-95">
       <svg id="icone-sol-noite" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -120,13 +126,14 @@
     </button>
   </div>
 
-  <!-- MODAL DE BUSCA + MODO ECO / NORMAL -->
+  <!-- MODAL DE BUSCA + CONFIGURAÇÃO DE BATERIA / PILOTAGEM -->
   <div id="modal-busca" class="hidden fixed inset-x-0 top-20 z-30 px-4">
-    <div class="max-w-md mx-auto bg-[#121212]/98 backdrop-blur-md p-4 rounded-2xl border border-[#e2b245]/40 shadow-2xl">
-      <div class="flex items-center justify-between mb-2.5">
-        <span class="text-xs font-bold uppercase tracking-wider text-[#e2b245]">Definir Destino</span>
+    <div class="max-w-md mx-auto bg-[#121212]/98 backdrop-blur-md p-4 rounded-2xl border border-[#e2b245]/40 shadow-2xl space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#e2b245]">Destino & Autonomia</span>
         <button onclick="toggleBusca()" class="text-zinc-400 hover:text-white text-xs font-bold px-2 py-1">Fechar ✕</button>
       </div>
+
       <div class="flex gap-2">
         <input 
           type="text" 
@@ -142,8 +149,9 @@
         </button>
       </div>
 
-      <div class="mt-3 pt-3 border-t border-zinc-800 flex items-center justify-between gap-2">
-        <span class="text-[11px] text-zinc-400 font-semibold">Perfil de pilotagem:</span>
+      <!-- Perfil de pilotagem -->
+      <div class="pt-2.5 border-t border-zinc-800 flex items-center justify-between gap-2">
+        <span class="text-[11px] text-zinc-400 font-semibold">Modo de pilotagem:</span>
         <div class="flex gap-1.5">
           <button id="btn-modo-eco" onclick="definirModoPilotagem('eco')" class="px-3 py-1 rounded-lg text-xs font-extrabold bg-[#e2b245] text-black">
             Eco (18 km/h) ⚡
@@ -153,10 +161,41 @@
           </button>
         </div>
       </div>
+
+      <!-- Sistema da Bateria (36V vs 48V) -->
+      <div class="pt-2.5 border-t border-zinc-800 flex items-center justify-between gap-2">
+        <span class="text-[11px] text-zinc-400 font-semibold">Sistema / Pack:</span>
+        <div class="flex gap-1.5">
+          <button id="btn-pack-36v" onclick="definirPackBateria('36v')" class="px-3 py-1 rounded-lg text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700">
+            36V
+          </button>
+          <button id="btn-pack-48v" onclick="definirPackBateria('48v')" class="px-3 py-1 rounded-lg text-xs font-extrabold bg-[#e2b245] text-black">
+            48V
+          </button>
+        </div>
+      </div>
+
+      <!-- Carga atual da bateria (%) -->
+      <div class="pt-2.5 border-t border-zinc-800">
+        <div class="flex items-center justify-between text-[11px] mb-1.5">
+          <span class="text-zinc-400 font-semibold">Carga atual da bateria:</span>
+          <span id="label-carga-atual" class="font-black text-[#e2b245]">100%</span>
+        </div>
+        <input 
+          type="range" 
+          id="input-carga-atual" 
+          min="10" 
+          max="100" 
+          step="5" 
+          value="100" 
+          oninput="atualizarCargaAtual(this.value)"
+          class="w-full accent-[#e2b245] cursor-pointer"
+        />
+      </div>
     </div>
   </div>
 
-  <!-- RESUMO COMPLETO DA ROTA (Lista de ruas para virar - estilo Google Maps) -->
+  <!-- RESUMO COMPLETO DA ROTA + ESTIMATIVA DE GASTO -->
   <div id="painel-etapas" class="hidden fixed bottom-16 left-0 right-0 z-30 px-3 pb-2">
     <div class="max-w-md mx-auto bg-[#121212]/98 backdrop-blur-md rounded-2xl border border-[#e2b245]/40 shadow-[0_-10px_30px_rgba(0,0,0,0.9)] overflow-hidden">
       <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-[#0d0d0d]">
@@ -169,7 +208,19 @@
         </button>
       </div>
 
-      <div id="lista-etapas-rota" class="max-h-64 overflow-y-auto divide-y divide-zinc-800/80 px-3 py-1">
+      <!-- Barra de Gasto e Restante de Bateria -->
+      <div id="resumo-bateria-box" class="px-4 py-2.5 bg-[#161616] border-b border-zinc-800/90 flex items-center justify-between text-xs">
+        <div>
+          <span class="text-zinc-400">Gasto na rota:</span>
+          <strong id="detalhe-gasto-rota" class="text-[#e2b245] ml-1">--%</strong>
+        </div>
+        <div>
+          <span class="text-zinc-400">Na chegada:</span>
+          <strong id="detalhe-sobra-rota" class="text-emerald-400 ml-1">--%</strong>
+        </div>
+      </div>
+
+      <div id="lista-etapas-rota" class="max-h-60 overflow-y-auto divide-y divide-zinc-800/80 px-3 py-1">
         <p class="text-xs text-zinc-400 py-6 text-center">Trace uma rota para ver todas as ruas e curvas.</p>
       </div>
     </div>
@@ -242,18 +293,17 @@
   <!-- 5. RODAPÉ FIXO -->
   <footer class="fixed bottom-0 left-0 right-0 z-20 h-16 bg-[#111111] border-t border-zinc-800 shadow-[0_-4px_20px_rgba(0,0,0,0.8)]">
     <div class="max-w-md mx-auto h-full grid grid-cols-4 items-center">
-      <button onclick="toggleBusca()" title="Buscar destino" class="h-full flex items-center justify-center border-r border-zinc-800 text-zinc-300 hover:text-[#e2b245] active:bg-zinc-900 transition">
+      <button onclick="toggleBusca()" title="Buscar destino e ajustar bateria" class="h-full flex items-center justify-center border-r border-zinc-800 text-zinc-300 hover:text-[#e2b245] active:bg-zinc-900 transition">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
       </button>
 
-      <!-- Centro: Abre o resumo completo das ruas da rota -->
-      <div onclick="toggleResumoRota()" title="Ver todas as ruas da rota" class="col-span-2 h-full flex flex-col items-center justify-center px-2 cursor-pointer active:bg-zinc-900 transition">
+      <div onclick="toggleResumoRota()" title="Ver todas as ruas e gasto de bateria" class="col-span-2 h-full flex flex-col items-center justify-center px-2 cursor-pointer active:bg-zinc-900 transition">
         <div class="flex items-center gap-1.5">
           <span id="hora-chegada" class="text-lg font-black text-white leading-none">--:--</span>
           <span id="badge-relevo" class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
-            Eco ⚡
+            Gasto --% ⚡
           </span>
         </div>
         <div class="flex items-center gap-1.5 text-xs font-bold text-zinc-400 mt-1">
@@ -287,8 +337,15 @@
     let mapaEscuroAtivo = true;
     let modoBussolaAtivo = true;
     let seguirUsuario = true;
-    let modoPilotagem = 'eco';
+    let modoPilotagem = 'eco'; // 'eco' ou 'normal'
+    let packBateria = '48v';   // '36v' ou '48v'
+    let cargaAtualPct = 100;   // 10% a 100%
     let wakeLockSentinel = null;
+
+    let vozAtiva = true;
+    let ultimaFalaTexto = '';
+    let ultimoTempoFala = 0;
+    let avisoProximidadeFalado = false;
 
     const map = L.map('map', { zoomControl: false }).setView(posAtual, 17);
     
@@ -296,6 +353,118 @@
       attribution: '&copy; OpenStreetMap &copy; CyclOSM',
       maxZoom: 20
     }).addTo(map);
+
+    function definirPackBateria(pack) {
+      packBateria = pack;
+      const btn36 = document.getElementById('btn-pack-36v');
+      const btn48 = document.getElementById('btn-pack-48v');
+
+      if (pack === '36v') {
+        btn36.className = "px-3 py-1 rounded-lg text-xs font-extrabold bg-[#e2b245] text-black";
+        btn48.className = "px-3 py-1 rounded-lg text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700";
+      } else {
+        btn48.className = "px-3 py-1 rounded-lg text-xs font-extrabold bg-[#e2b245] text-black";
+        btn36.className = "px-3 py-1 rounded-lg text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700";
+      }
+
+      if (ultimaRotaDados) {
+        atualizarMetricasRota(ultimaRotaDados.distance);
+      }
+    }
+
+    function atualizarCargaAtual(valor) {
+      cargaAtualPct = parseInt(valor, 10) || 100;
+      document.getElementById('label-carga-atual').innerText = `${cargaAtualPct}%`;
+      if (ultimaRotaDados) {
+        atualizarMetricasRota(ultimaRotaDados.distance);
+      }
+    }
+
+    // Cálculo de gasto (% da bateria) baseado em distância, voltagem, modo e relevo/extensão
+    function calcularEstimativaBateria(distanciaKm) {
+      // Percentual estimado por km
+      const taxaBasePorKm = packBateria === '48v'
+        ? (modoPilotagem === 'eco' ? 2.1 : 3.0)
+        : (modoPilotagem === 'eco' ? 2.8 : 4.0);
+
+      // Ajuste de esforço por distância/relevo
+      const fatorEsforco = distanciaKm > 4 ? 1.15 : 1.0;
+      const gastoPct = Math.min(100, Math.max(1, Math.round(distanciaKm * taxaBasePorKm * fatorEsforco)));
+      const sobraPct = cargaAtualPct - gastoPct;
+
+      return { gastoPct, sobraPct };
+    }
+
+    function falarInstrucao(texto, forcar = false) {
+      if (!vozAtiva || !('speechSynthesis' in window)) return;
+      if (!texto || !texto.trim()) return;
+
+      const agora = Date.now();
+      if (!forcar && texto === ultimaFalaTexto && (agora - ultimoTempoFala) < 12000) {
+        return;
+      }
+
+      ultimaFalaTexto = texto;
+      ultimoTempoFala = agora;
+
+      try {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(texto);
+        utterance.lang = 'pt-BR';
+        utterance.rate = 1.05;
+        utterance.pitch = 1.0;
+
+        const vozes = window.speechSynthesis.getVoices();
+        const vozPt = vozes.find(v => v.lang && v.lang.toLowerCase().includes('pt-br')) ||
+                      vozes.find(v => v.lang && v.lang.toLowerCase().includes('pt'));
+        if (vozPt) utterance.voice = vozPt;
+
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {}
+    }
+
+    function alternarVoz() {
+      vozAtiva = !vozAtiva;
+      const btn = document.getElementById('btn-voz');
+
+      if (vozAtiva) {
+        btn.className = "w-11 h-11 rounded-full bg-[#e2b245]/20 border-2 border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center text-[#e2b245] transition-all active:scale-95";
+        falarInstrucao("Voz de navegação ativada", true);
+      } else {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        btn.className = "w-11 h-11 rounded-full bg-[#121212]/95 border border-zinc-700 shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center text-zinc-500 transition-all active:scale-95";
+      }
+    }
+
+    function distanciaEmMetros(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const toRad = (deg) => deg * Math.PI / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function verificarProximidadeManobra() {
+      if (!ultimaRotaDados || !ultimaRotaDados.legs?.[0]?.steps?.length) return;
+      const steps = ultimaRotaDados.legs[0].steps;
+      const proxPasso = steps.length > 1 ? steps[1] : steps[0];
+      const loc = proxPasso?.maneuver?.location;
+      if (!loc) return;
+
+      const distRestante = distanciaEmMetros(posAtual[0], posAtual[1], loc[1], loc[0]);
+      const info = descreverManobra(proxPasso);
+
+      if (distRestante <= 110 && !avisoProximidadeFalado) {
+        avisoProximidadeFalado = true;
+        const metrosArredondados = Math.max(20, Math.round(distRestante / 10) * 10);
+        falarInstrucao(`Em ${metrosArredondados} metros, ${info.acao} ${info.rua}`);
+      } else if (distRestante > 180) {
+        avisoProximidadeFalado = false;
+      }
+    }
 
     function toggleResumoRota() {
       const painel = document.getElementById('painel-etapas');
@@ -312,24 +481,24 @@
     function descreverManobra(step) {
       const type = step.maneuver?.type || '';
       const mod = step.maneuver?.modifier || '';
-      const rua = step.name && step.name.trim() !== '' ? step.name : 'Via sem nome / ciclovia';
+      const rua = step.name && step.name.trim() !== '' ? step.name : 'ciclovia ou via local';
 
       if (type === 'arrive') {
-        return { acao: 'Chegada ao destino', rua, seta: '🏁' };
+        return { acao: 'Chegada ao destino em', rua, seta: '🏁' };
       }
       if (type === 'depart') {
         return { acao: 'Siga em frente por', rua, seta: '↑' };
       }
       if (mod.includes('left')) {
-        return { acao: 'Vire à esquerda em', rua, seta: '↰' };
+        return { acao: 'vire à esquerda em', rua, seta: '↰' };
       }
       if (mod.includes('right')) {
-        return { acao: 'Vire à direita em', rua, seta: '↱' };
+        return { acao: 'vire à direita em', rua, seta: '↱' };
       }
       if (type === 'roundabout') {
-        return { acao: 'Entre na rotatória para', rua, seta: '↻' };
+        return { acao: 'entre na rotatória para', rua, seta: '↻' };
       }
-      return { acao: 'Continue por', rua, seta: '↑' };
+      return { acao: 'continue por', rua, seta: '↑' };
     }
 
     function formatarDistanciaCurta(metros) {
@@ -354,13 +523,30 @@
 
       if (!ultimaRotaDados || !ultimaRotaDados.legs?.[0]?.steps?.length) {
         titulo.innerText = 'Ruas e conversões da rota';
+        document.getElementById('detalhe-gasto-rota').innerText = '--%';
+        document.getElementById('detalhe-sobra-rota').innerText = '--%';
         container.innerHTML = `<p class="text-xs text-zinc-400 py-6 text-center">Nenhuma rota ativa no momento. Toque na lupa ou no mapa para definir um destino.</p>`;
         return;
       }
 
       const steps = ultimaRotaDados.legs[0].steps;
       const totalKm = (ultimaRotaDados.distance / 1000).toFixed(1);
-      titulo.innerText = `${steps.length} etapas • ${totalKm} km`;
+      const { gastoPct, sobraPct } = calcularEstimativaBateria(parseFloat(totalKm));
+
+      titulo.innerText = `${steps.length} etapas • ${totalKm} km (${packBateria.toUpperCase()})`;
+      document.getElementById('detalhe-gasto-rota').innerText = `-${gastoPct}%`;
+
+      const sobraEl = document.getElementById('detalhe-sobra-rota');
+      if (sobraPct <= 0) {
+        sobraEl.innerText = `Carga insuficiente (${sobraPct}%) ⚠️`;
+        sobraEl.className = "text-red-400 ml-1 font-black";
+      } else if (sobraPct < 20) {
+        sobraEl.innerText = `${sobraPct}% (Baixa ⚠️)`;
+        sobraEl.className = "text-yellow-400 ml-1 font-black";
+      } else {
+        sobraEl.innerText = `${sobraPct}%`;
+        sobraEl.className = "text-emerald-400 ml-1 font-black";
+      }
 
       container.innerHTML = steps.map((step, index) => {
         const info = descreverManobra(step);
@@ -443,7 +629,9 @@
         marcadorDestino = null;
       }
       ultimaRotaDados = null;
+      avisoProximidadeFalado = false;
       fecharResumoRota();
+      falarInstrucao("Rota encerrada", true);
       document.getElementById('btn-limpar-rota').classList.add('hidden');
       document.getElementById('distancia-manobra').innerText = 'Pronto';
       document.getElementById('rua-manobra').innerText = 'Toque na lupa abaixo ou no mapa';
@@ -451,6 +639,7 @@
       document.getElementById('hora-chegada').innerText = '--:--';
       document.getElementById('tempo-texto').innerText = '0 min';
       document.getElementById('distancia-texto').innerText = '0 km';
+      document.getElementById('badge-relevo').innerText = 'Gasto --% ⚡';
       recentralizarUsuario();
     }
 
@@ -648,16 +837,22 @@
       document.getElementById('distancia-texto').innerText = `${distanciaKm} km`;
       document.getElementById('tempo-texto').innerText = `${tempoMinutos} min`;
 
-      const fatorConsumo = modoPilotagem === 'eco' ? 1.8 : 2.5;
-      const bateriaEstimada = Math.min(99, Math.max(2, Math.round(parseFloat(distanciaKm) * fatorConsumo)));
-
+      const { gastoPct, sobraPct } = calcularEstimativaBateria(parseFloat(distanciaKm));
       const badgeRelevo = document.getElementById('badge-relevo');
-      if (modoPilotagem === 'eco') {
-        badgeRelevo.innerText = `Eco ~${bateriaEstimada}% ⚡`;
+
+      if (sobraPct <= 0) {
+        badgeRelevo.innerText = `Gasto ${gastoPct}% ⚠️`;
+        badgeRelevo.className = "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400";
+      } else if (modoPilotagem === 'eco') {
+        badgeRelevo.innerText = `Gasto ~${gastoPct}% ⚡`;
         badgeRelevo.className = "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400";
       } else {
-        badgeRelevo.innerText = `Normal ~${bateriaEstimada}%`;
+        badgeRelevo.innerText = `Gasto ~${gastoPct}%`;
         badgeRelevo.className = "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400";
+      }
+
+      if (!document.getElementById('painel-etapas').classList.contains('hidden')) {
+        renderizarListaEtapas();
       }
     }
 
@@ -689,6 +884,7 @@
             }
 
             posAnterior = [lat, lng];
+            verificarProximidadeManobra();
 
             if (primeiraVez || seguirUsuario) {
               map.setView(posAtual, map.getZoom(), { animate: !primeiraVez });
@@ -729,6 +925,8 @@
     });
 
     async function definirDestinoECalcular(destLat, destLng, nomeLocal = "Destino") {
+      avisoProximidadeFalado = false;
+
       if (marcadorDestino) {
         marcadorDestino.setLatLng([destLat, destLng]);
       } else {
@@ -772,6 +970,9 @@
             document.getElementById('distancia-manobra').innerText = distPasso;
             document.getElementById('rua-manobra').innerText = proxPasso.name || nomeLocal;
             document.getElementById('via-atual-texto').innerText = passos[0].name || "Via Local";
+
+            const infoFala = descreverManobra(proxPasso);
+            falarInstrucao(`Rota traçada. ${infoFala.acao} ${infoFala.rua}`, true);
           }
 
           atualizarMetricasRota(rota.distance);
@@ -780,6 +981,10 @@
       } catch (e) {
         alert("Erro ao traçar rota.");
       }
+    }
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
     }
 
     iniciarGPS();
