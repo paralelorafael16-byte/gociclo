@@ -138,7 +138,7 @@
 
   <!-- MENU DE CONFIGURAÇÕES RECOLHÍVEL -->
   <div id="painel-config" class="hidden fixed top-20 right-4 left-4 z-30">
-    <div class="max-w-md mx-auto bg-[#121212]/98 backdrop-blur-md p-4 rounded-2xl border border-[#e2b245]/40 shadow-2xl space-y-3.5">
+    <div class="max-w-md mx-auto bg-[#121212]/98 backdrop-blur-md p-4 rounded-2xl border border-[#e2b245]/40 shadow-2xl space-y-3.5 max-h-[75vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5">
         <div>
           <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#e2b245]">Preferências do App</span>
@@ -151,7 +151,7 @@
 
       <!-- Escolha da voz do app -->
       <div class="space-y-2">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-2">
           <label for="select-voz-app" class="text-xs font-bold text-zinc-200">Voz da navegação</label>
           <div class="flex items-center gap-1.5">
             <button onclick="carregarListaVozes(true)" class="text-[10px] font-bold bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-700 px-2 py-1 rounded-lg transition">
@@ -164,9 +164,22 @@
         </div>
 
         <select id="select-voz-app" onchange="definirVozSelecionada(this.value)" class="w-full bg-[#1a1a1a] text-xs font-semibold text-white px-3 py-2.5 rounded-xl border border-zinc-700 focus:outline-none focus:border-[#e2b245]">
-          <option value="">Voz padrão do sistema (pt-BR)</option>
+          <option value="">Padrão do sistema (pt-BR)</option>
         </select>
-        <p id="info-voz-diagnostico" class="text-[10px] text-zinc-400"></p>
+
+        <!-- Estilo de fala / tom (ajuste local do TTS do aparelho) -->
+        <div class="flex items-center justify-between gap-2 pt-1">
+          <label for="select-estilo-fala" class="text-[11px] font-semibold text-zinc-400">Tom e ritmo da fala:</label>
+          <select id="select-estilo-fala" onchange="definirEstiloFala(this.value)" class="bg-[#1a1a1a] text-[11px] font-bold text-zinc-200 px-2.5 py-1.5 rounded-lg border border-zinc-700 focus:outline-none focus:border-[#e2b245]">
+            <option value="padrao">Natural (Padrão)</option>
+            <option value="grave">Tom mais grave</option>
+            <option value="agudo">Tom mais agudo</option>
+            <option value="rapido">Ritmo rápido</option>
+            <option value="calmo">Ritmo calmo</option>
+          </select>
+        </div>
+
+        <p id="info-voz-diagnostico" class="text-[10px] text-zinc-400 leading-snug"></p>
       </div>
 
       <!-- Liga/desliga voz, tela e tema -->
@@ -433,7 +446,8 @@
     let ultimaCoordFuso = null;
 
     let vozAtiva = true;
-    let chaveVozSelecionada = ''; // Salva voiceURI ou name
+    let chaveVozSelecionada = '';
+    let estiloFalaSelecionado = 'padrao';
     let vozesDisponiveis = [];
     let ultimaFalaTexto = '';
     let ultimoTempoFala = 0;
@@ -451,6 +465,7 @@
         localStorage.setItem('gotrix_prefs', JSON.stringify({
           vozAtiva,
           chaveVozSelecionada,
+          estiloFalaSelecionado,
           manterTelaAtiva,
           mapaEscuroAtivo
         }));
@@ -465,6 +480,7 @@
         if (typeof prefs.vozAtiva === 'boolean') vozAtiva = prefs.vozAtiva;
         if (typeof prefs.chaveVozSelecionada === 'string') chaveVozSelecionada = prefs.chaveVozSelecionada;
         else if (typeof prefs.nomeVozSelecionada === 'string') chaveVozSelecionada = prefs.nomeVozSelecionada;
+        if (typeof prefs.estiloFalaSelecionado === 'string') estiloFalaSelecionado = prefs.estiloFalaSelecionado;
         if (typeof prefs.manterTelaAtiva === 'boolean') manterTelaAtiva = prefs.manterTelaAtiva;
         if (typeof prefs.mapaEscuroAtivo === 'boolean') mapaEscuroAtivo = prefs.mapaEscuroAtivo;
       } catch (e) {}
@@ -476,6 +492,8 @@
       const painel = document.getElementById('painel-config');
       painel.classList.toggle('hidden');
       if (!painel.classList.contains('hidden')) {
+        const estiloSelect = document.getElementById('select-estilo-fala');
+        if (estiloSelect) estiloSelect.value = estiloFalaSelecionado;
         carregarListaVozes(true);
         setTimeout(() => carregarListaVozes(false), 250);
         atualizarVisualBotaoVoz();
@@ -490,6 +508,24 @@
 
     function getChaveVoz(v) {
       return v.voiceURI || v.name || '';
+    }
+
+    function rotularRegiaoIdioma(lang = '') {
+      const norm = lang.toLowerCase().replace('_', '-');
+      if (norm.startsWith('pt-br')) return 'Brasil';
+      if (norm.startsWith('pt-ao')) return 'Angola';
+      if (norm.startsWith('pt-mz')) return 'Moçambique';
+      if (norm.startsWith('pt-pt')) return 'Portugal';
+      if (norm.startsWith('pt')) return 'Português';
+      if (norm.startsWith('es-ve')) return 'Venezuela';
+      if (norm.startsWith('es-co')) return 'Colômbia';
+      if (norm.startsWith('es-cu')) return 'Cuba';
+      if (norm.startsWith('es-419')) return 'América Latina';
+      if (norm.startsWith('es')) return 'Espanhol';
+      if (norm.startsWith('en-ng')) return 'Nigéria';
+      if (norm.startsWith('en')) return 'Inglês';
+      if (norm.startsWith('fr')) return 'Francês';
+      return lang || 'Idioma';
     }
 
     function carregarListaVozes(forcarConsulta = false) {
@@ -514,9 +550,9 @@
       const ptCount = ordenadas.filter(v => (v.lang || '').toLowerCase().startsWith('pt')).length;
       if (diag) {
         if (!ordenadas.length) {
-          diag.innerText = 'Nenhuma voz listada ainda neste navegador/celular.';
+          diag.innerText = 'Nenhuma voz listada ainda. Baixe pacotes no TTS do celular e toque em Atualizar.';
         } else {
-          diag.innerText = `${ordenadas.length} voz(es) encontrada(s) (${ptCount} em português).`;
+          diag.innerText = `${ordenadas.length} voz(es) no aparelho (${ptCount} pt). Sotaques extras dependem dos pacotes instalados no TTS do celular.`;
         }
       }
 
@@ -524,7 +560,8 @@
         ordenadas.map((v, idx) => {
           const chave = getChaveVoz(v);
           const selected = chave && chave === chaveVozSelecionada ? 'selected' : '';
-          const rotulo = `${v.name} [${v.lang || 'sem idioma'}]${v.localService ? ' • local' : ''}`;
+          const regiao = rotularRegiaoIdioma(v.lang);
+          const rotulo = `${regiao} — ${v.name} (${v.lang || 'n/d'})`;
           return `<option value="${chave.replace(/"/g, '&quot;')}" ${selected}>${idx + 1}. ${rotulo}</option>`;
         }).join('');
     }
@@ -534,13 +571,33 @@
       salvarPreferencias();
     }
 
+    function definirEstiloFala(estilo) {
+      estiloFalaSelecionado = estilo;
+      salvarPreferencias();
+    }
+
+    function obterParametrosEstiloFala() {
+      switch (estiloFalaSelecionado) {
+        case 'grave':
+          return { rate: 0.98, pitch: 0.82 };
+        case 'agudo':
+          return { rate: 1.04, pitch: 1.22 };
+        case 'rapido':
+          return { rate: 1.2, pitch: 1.02 };
+        case 'calmo':
+          return { rate: 0.88, pitch: 0.96 };
+        default:
+          return { rate: 1.02, pitch: 1.0 };
+      }
+    }
+
     function testarVozSelecionada() {
       vozAtiva = true;
       atualizarVisualBotaoVoz();
       salvarPreferencias();
       const voz = obterVozEscolhida();
-      const nomeExibido = voz ? voz.name : 'padrão do sistema';
-      falarInstrucao(`Testando voz ${nomeExibido}. Vire à direita na próxima rua.`, true);
+      const nomeExibido = voz ? `${rotularRegiaoIdioma(voz.lang)} — ${voz.name}` : 'padrão do sistema';
+      falarInstrucao(`Testando voz ${nomeExibido}. Siga em frente e vire à direita.`, true);
     }
 
     function obterVozEscolhida() {
@@ -574,6 +631,7 @@
           if (!vozAtiva) return;
           const utterance = new SpeechSynthesisUtterance(texto);
           const vozEscolhida = obterVozEscolhida();
+          const params = obterParametrosEstiloFala();
 
           if (vozEscolhida) {
             utterance.voice = vozEscolhida;
@@ -582,8 +640,8 @@
             utterance.lang = 'pt-BR';
           }
 
-          utterance.rate = 1.02;
-          utterance.pitch = 1.0;
+          utterance.rate = params.rate;
+          utterance.pitch = params.pitch;
           utterance.volume = 1.0;
 
           window.speechSynthesis.resume?.();
