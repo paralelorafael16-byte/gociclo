@@ -22,6 +22,7 @@
       background-color: #0b0b0b;
     }
 
+    /* Container ampliado para permitir rotação 360° do mapa sem mostrar bordas cortadas nos cantos */
     #map-viewport {
       position: fixed;
       inset: 0;
@@ -57,6 +58,7 @@
   <!-- 1. BARRA SUPERIOR DE MANOBRA -->
   <header class="fixed top-0 left-0 right-0 z-20 bg-[#0a0a0a] border-b border-[#e2b245]/30 px-4 py-3.5 shadow-[0_8px_24px_rgba(0,0,0,0.85)]">
     <div class="max-w-md mx-auto flex items-center gap-4">
+      <!-- Ícone da Próxima Manobra -->
       <div id="icone-manobra" class="w-12 h-12 flex items-center justify-center shrink-0 text-white">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18V9a4 4 0 0 1 4-4h6" />
@@ -64,6 +66,7 @@
         </svg>
       </div>
 
+      <!-- Distância e Nome da Rua -->
       <div class="min-w-0 flex-1">
         <div class="flex items-center justify-between">
           <p id="distancia-manobra" class="text-2xl font-black tracking-tight text-white leading-none">
@@ -80,97 +83,19 @@
     </div>
   </header>
 
-  <!-- CONTROLES FLUTUANTES SUPERIORES DIREITOS (Bússola + Calibrar GPS) -->
-  <div class="fixed top-24 right-4 z-20 flex flex-col items-end gap-2.5">
-    <!-- Botão Bússola -->
-    <div class="flex flex-col items-center">
-      <button id="btn-bussola" onclick="alternarModoBussola()" title="Orientar mapa pela direção" class="w-12 h-12 rounded-full bg-[#121212]/95 border-2 border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center transition-all active:scale-95">
-        <svg id="agulha-bussola" class="w-7 h-7 transition-transform duration-300" viewBox="0 0 32 32" fill="none">
-          <circle cx="16" cy="16" r="14" stroke="#3f3f46" stroke-width="1.2"/>
-          <polygon points="16,4 20,16 12,16" fill="#ef4444"/>
-          <polygon points="16,28 20,16 12,16" fill="#e2b245"/>
-          <circle cx="16" cy="16" r="2.2" fill="#0a0a0a" stroke="#ffffff" stroke-width="1"/>
-        </svg>
-      </button>
-      <span id="label-bussola" class="mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-[#e2b245] border border-[#e2b245]/30 shadow">
-        Bússola ON
-      </span>
-    </div>
-
-    <!-- Botão Calibrar GPS -->
-    <div class="flex flex-col items-center">
-      <button onclick="abrirCalibracao()" title="Calibrar GPS e Bússola" class="w-12 h-12 rounded-full bg-[#121212]/95 border border-zinc-700 hover:border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center text-[#e2b245] transition-all active:scale-95">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-          <circle cx="12" cy="12" r="2"/>
-          <path d="M12 6v2M12 16v2M6 12h2M16 12h2"/>
-        </svg>
-      </button>
-      <span id="status-precisao-mini" class="mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-zinc-300 border border-zinc-700 shadow">
-        GPS --m
-      </span>
-    </div>
-  </div>
-
-  <!-- MODAL DE CALIBRAÇÃO DO GPS E BÚSSOLA -->
-  <div id="modal-calibracao" class="hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="w-full max-w-md bg-[#121212] border border-[#e2b245]/40 rounded-2xl p-5 shadow-2xl">
-      <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
-        <div>
-          <span class="text-[10px] font-extrabold uppercase tracking-widest text-[#e2b245]">Diagnóstico & Sensores</span>
-          <h2 class="text-lg font-black text-white">Calibrar GPS e Bússola</h2>
-        </div>
-        <button onclick="fecharCalibracao()" class="text-zinc-400 hover:text-white text-sm font-bold px-2 py-1">✕</button>
-      </div>
-
-      <!-- Indicador de Precisão Atual -->
-      <div class="mt-4 bg-[#181818] border border-zinc-800 rounded-xl p-3.5 flex items-center justify-between">
-        <div>
-          <p class="text-[10px] uppercase font-bold text-zinc-400">Precisão Atual do Sinal</p>
-          <p id="cal-precisao-texto" class="text-base font-black text-zinc-200 mt-0.5">Aguardando leitura...</p>
-          <p id="cal-coords-texto" class="text-[11px] text-zinc-500 mt-0.5">Lat: -- | Lng: --</p>
-        </div>
-        <span id="cal-badge-sinal" class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-zinc-800 text-zinc-300">
-          --m
-        </span>
-      </div>
-
-      <!-- Dica de Calibração Física -->
-      <div class="mt-3 bg-[#e2b245]/10 border border-[#e2b245]/25 rounded-xl p-3 text-xs text-zinc-200 space-y-1">
-        <p class="font-bold text-[#e2b245]">Como calibrar a bússola do celular:</p>
-        <p>• Gire o aparelho no ar formando um <span class="font-bold text-white">"8"</span> por 5 segundos.</p>
-        <p>• Evite deixar o celular encostado em suportes metálicos ou ímãs da scooter durante a leitura.</p>
-      </div>
-
-      <!-- Ajuste Fino Manual do Rumo -->
-      <div class="mt-4">
-        <div class="flex items-center justify-between text-xs mb-2">
-          <span class="font-bold text-zinc-300">Ajuste fino da direção do mapa:</span>
-          <span id="cal-offset-valor" class="font-extrabold text-[#e2b245]">0°</span>
-        </div>
-        <div class="grid grid-cols-3 gap-2">
-          <button onclick="ajustarOffsetBussola(-15)" class="bg-[#1b1b1b] hover:bg-zinc-800 border border-zinc-700 py-2 rounded-xl text-xs font-bold text-white active:scale-95">
-            ↺ -15° Esq
-          </button>
-          <button onclick="resetarOffsetBussola()" class="bg-[#1b1b1b] hover:bg-zinc-800 border border-zinc-700 py-2 rounded-xl text-xs font-bold text-[#e2b245] active:scale-95">
-            Zerar (0°)
-          </button>
-          <button onclick="ajustarOffsetBussola(15)" class="bg-[#1b1b1b] hover:bg-zinc-800 border border-zinc-700 py-2 rounded-xl text-xs font-bold text-white active:scale-95">
-            +15° Dir ↻
-          </button>
-        </div>
-      </div>
-
-      <!-- Ações Principais de Calibração -->
-      <div class="mt-5 flex gap-2.5">
-        <button id="btn-forcar-calibracao" onclick="forcarRecalibracaoGPS()" class="flex-1 bg-gradient-to-r from-yellow-400 to-[#e2b245] hover:brightness-110 text-black font-extrabold py-3 rounded-xl text-xs uppercase tracking-wider shadow-lg active:scale-95 transition">
-          Recalibrar GPS Agora
-        </button>
-        <button onclick="fecharCalibracao()" class="px-4 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-3 rounded-xl text-xs">
-          Concluir
-        </button>
-      </div>
-    </div>
+  <!-- BOTÃO DE BÚSSOLA FLUTUANTE (Canto Superior Direito) -->
+  <div class="fixed top-24 right-4 z-20 flex flex-col items-end gap-1.5">
+    <button id="btn-bussola" onclick="alternarModoBussola()" title="Orientar mapa pela direção" class="w-12 h-12 rounded-full bg-[#121212]/95 border-2 border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center transition-all active:scale-95">
+      <svg id="agulha-bussola" class="w-7 h-7 transition-transform duration-300" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#3f3f46" stroke-width="1.2"/>
+        <polygon points="16,4 20,16 12,16" fill="#ef4444"/>
+        <polygon points="16,28 20,16 12,16" fill="#e2b245"/>
+        <circle cx="16" cy="16" r="2.2" fill="#0a0a0a" stroke="#ffffff" stroke-width="1"/>
+      </svg>
+    </button>
+    <span id="label-bussola" class="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-[#e2b245] border border-[#e2b245]/30 shadow">
+      Bússola ON
+    </span>
   </div>
 
   <!-- MODAL DE BUSCA -->
@@ -298,6 +223,7 @@
     </div>
   </footer>
 
+  <!-- Viewport ampliado para rotação suave sem cortes -->
   <div id="map-viewport">
     <div id="map" class="mapa-escuro"></div>
   </div>
@@ -306,10 +232,6 @@
     let posAtual = [-25.5347, -49.2064]; 
     let posAnterior = null;
     let anguloAtual = 0;
-    let offsetBussola = 0; // Ajuste manual de calibração em graus
-    let precisaoAtual = null;
-    let watchId = null;
-
     let marcadorUsuario = null;
     let marcadorDestino = null;
     let linhaRota = null;
@@ -325,98 +247,7 @@
       maxZoom: 20
     }).addTo(map);
 
-    // Funções de Calibração
-    function abrirCalibracao() {
-      document.getElementById('modal-calibracao').classList.remove('hidden');
-      atualizarPainelCalibracao();
-    }
-
-    function fecharCalibracao() {
-      document.getElementById('modal-calibracao').classList.add('hidden');
-    }
-
-    function atualizarPainelCalibracao() {
-      const textoEl = document.getElementById('cal-precisao-texto');
-      const badgeEl = document.getElementById('cal-badge-sinal');
-      const miniEl = document.getElementById('status-precisao-mini');
-      const coordsEl = document.getElementById('cal-coords-texto');
-
-      coordsEl.innerText = `Lat: ${posAtual[0].toFixed(5)} | Lng: ${posAtual[1].toFixed(5)}`;
-      document.getElementById('cal-offset-valor').innerText = `${offsetBussola > 0 ? '+' : ''}${offsetBussola}°`;
-
-      if (precisaoAtual === null || isNaN(precisaoAtual)) {
-        textoEl.innerText = "Sinal pendente";
-        badgeEl.innerText = "--m";
-        miniEl.innerText = "GPS --m";
-        return;
-      }
-
-      const metros = Math.round(precisaoAtual);
-      badgeEl.innerText = `±${metros}m`;
-      miniEl.innerText = `GPS ±${metros}m`;
-
-      if (metros <= 12) {
-        textoEl.innerText = "Excelente precisão para ciclovias";
-        textoEl.className = "text-base font-black text-emerald-400 mt-0.5";
-        badgeEl.className = "text-xs font-extrabold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400";
-        miniEl.className = "mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-emerald-400 border border-emerald-500/40 shadow";
-      } else if (metros <= 30) {
-        textoEl.innerText = "Precisão moderada — calibre se necessário";
-        textoEl.className = "text-base font-black text-[#e2b245] mt-0.5";
-        badgeEl.className = "text-xs font-extrabold px-2.5 py-1 rounded-lg bg-[#e2b245]/20 text-[#e2b245]";
-        miniEl.className = "mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-[#e2b245] border border-[#e2b245]/40 shadow";
-      } else {
-        textoEl.innerText = "Sinal fraco — busque área aberta";
-        textoEl.className = "text-base font-black text-red-400 mt-0.5";
-        badgeEl.className = "text-xs font-extrabold px-2.5 py-1 rounded-lg bg-red-500/20 text-red-400";
-        miniEl.className = "mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-red-400 border border-red-500/40 shadow";
-      }
-    }
-
-    function ajustarOffsetBussola(delta) {
-      offsetBussola = (offsetBussola + delta + 360) % 360;
-      if (offsetBussola > 180) offsetBussola -= 360;
-      atualizarPainelCalibracao();
-      aplicarOrientacaoMapa(anguloAtual);
-    }
-
-    function resetarOffsetBussola() {
-      offsetBussola = 0;
-      atualizarPainelCalibracao();
-      aplicarOrientacaoMapa(anguloAtual);
-    }
-
-    function forcarRecalibracaoGPS() {
-      const btn = document.getElementById('btn-forcar-calibracao');
-      btn.innerText = "Calibrando satélite...";
-      btn.disabled = true;
-
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            posAtual = [position.coords.latitude, position.coords.longitude];
-            precisaoAtual = position.coords.accuracy;
-            if (marcadorUsuario) marcadorUsuario.setLatLng(posAtual);
-            recentralizarUsuario();
-            atualizarPainelCalibracao();
-            btn.innerText = "Calibrado ✓";
-            setTimeout(() => {
-              btn.innerText = "Recalibrar GPS Agora";
-              btn.disabled = false;
-            }, 1500);
-          },
-          () => {
-            atualizarPainelCalibracao();
-            btn.innerText = "Recalibrar GPS Agora";
-            btn.disabled = false;
-            alert("Não foi possível obter nova leitura agora. Verifique se o GPS do aparelho está ativo.");
-          },
-          { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
-        );
-      }
-    }
-
-    // Seguimento e Recentralização
+    // Pausa o seguimento automático quando o usuário arrasta o mapa manualmente
     map.on('dragstart', () => {
       seguirUsuario = false;
       const btn = document.getElementById('btn-recentralizar');
@@ -425,6 +256,7 @@
       badge.classList.remove('hidden');
     });
 
+    // Recentraliza a câmera e reativa o seguimento
     function recentralizarUsuario() {
       seguirUsuario = true;
       const btn = document.getElementById('btn-recentralizar');
@@ -436,6 +268,7 @@
       aplicarOrientacaoMapa(anguloAtual);
     }
 
+    // Alterna entre Modo Bússola (Proa para cima) e Modo Norte Fixo
     async function alternarModoBussola() {
       modoBussolaAtivo = !modoBussolaAtivo;
       const btn = document.getElementById('btn-bussola');
@@ -449,33 +282,33 @@
         btn.classList.add('border-[#e2b245]');
         btn.classList.remove('border-zinc-600');
         label.innerText = 'Bússola ON';
-        label.className = 'mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-[#e2b245] border border-[#e2b245]/30 shadow';
+        label.className = 'text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-[#e2b245] border border-[#e2b245]/30 shadow';
       } else {
         btn.classList.remove('border-[#e2b245]');
         btn.classList.add('border-zinc-600');
         label.innerText = 'Norte Fixo';
-        label.className = 'mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-zinc-400 border border-zinc-700 shadow';
+        label.className = 'text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-zinc-400 border border-zinc-700 shadow';
       }
 
       aplicarOrientacaoMapa(anguloAtual);
     }
 
+    // Aplica a rotação no mapa, na agulha da bússola e no cursor da scooter
     function aplicarOrientacaoMapa(rumoGraus) {
       if (rumoGraus === null || isNaN(rumoGraus)) return;
       anguloAtual = rumoGraus;
-      const rumoFinal = (anguloAtual + offsetBussola + 360) % 360;
 
       const mapEl = document.getElementById('map');
       const scooterEl = document.getElementById('scooter-cursor');
       const agulhaEl = document.getElementById('agulha-bussola');
 
       if (modoBussolaAtivo) {
-        mapEl.style.transform = `translate(-50%, -50%) rotate(${-rumoFinal}deg)`;
-        if (scooterEl) scooterEl.style.transform = `rotate(${rumoFinal}deg)`;
-        if (agulhaEl) agulhaEl.style.transform = `rotate(${-rumoFinal}deg)`;
+        mapEl.style.transform = `translate(-50%, -50%) rotate(${-anguloAtual}deg)`;
+        if (scooterEl) scooterEl.style.transform = `rotate(${anguloAtual}deg)`;
+        if (agulhaEl) agulhaEl.style.transform = `rotate(${-anguloAtual}deg)`;
       } else {
         mapEl.style.transform = `translate(-50%, -50%) rotate(0deg)`;
-        if (scooterEl) scooterEl.style.transform = `rotate(${rumoFinal}deg)`;
+        if (scooterEl) scooterEl.style.transform = `rotate(${anguloAtual}deg)`;
         if (agulhaEl) agulhaEl.style.transform = `rotate(0deg)`;
       }
     }
@@ -600,19 +433,15 @@
 
     function iniciarGPS() {
       if ("geolocation" in navigator) {
-        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-
-        watchId = navigator.geolocation.watchPosition(
+        navigator.geolocation.watchPosition(
           (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             const heading = position.coords.heading;
             const speedMs = position.coords.speed;
-            precisaoAtual = position.coords.accuracy;
             const primeiraVez = !marcadorUsuario;
             
             posAtual = [lat, lng];
-            atualizarPainelCalibracao();
 
             const kmh = (speedMs !== null && !isNaN(speedMs) && speedMs >= 0) ? Math.round(speedMs * 3.6) : 0;
             atualizarVelocimetro(kmh);
@@ -636,10 +465,9 @@
             }
           },
           () => {
-            atualizarPainelCalibracao();
             if (!marcadorUsuario) marcadorUsuario = L.marker(posAtual, { icon: iconeScooterWaze, zIndexOffset: 1000 }).addTo(map);
           },
-          { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
+          { enableHighAccuracy: true, maximumAge: 1500, timeout: 10000 }
         );
       }
     }
