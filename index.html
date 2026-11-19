@@ -33,106 +33,165 @@
     }
   </style>
 </head>
-<body class="text-white">
+<body class="text-white select-none">
 
-  <!-- Painel Superior (Marca, Busca e Controles) -->
-  <div class="fixed top-4 left-4 right-4 z-10 max-w-md mx-auto bg-[#0f0f0f]/95 backdrop-blur-md p-4 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-[#e2b245]/30">
-    <div class="flex items-center justify-between mb-3">
-      <!-- Identidade GoTrix -->
-      <div class="flex items-center gap-1">
-        <span class="text-2xl font-black italic tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-[#e2b245] to-yellow-500">
-          Go<span class="text-white">Trix</span>
-        </span>
-        <span class="text-[9px] uppercase tracking-widest text-[#e2b245] font-bold border border-[#e2b245]/30 px-1.5 py-0.5 rounded-md ml-1.5 bg-[#e2b245]/10">
-          ECO GPS
-        </span>
-      </div>
-      
-      <div class="flex items-center gap-1.5">
-        <button id="btn-tema-mapa" onclick="alternarTemaMapa()" class="text-xs bg-[#1a1a1a] hover:bg-[#262626] text-zinc-300 font-medium px-2.5 py-1.5 rounded-lg border border-zinc-700 transition-all">
-          Mapa: Escuro
-        </button>
-        <button onclick="centralizarUsuario()" class="text-xs bg-[#1a1a1a] hover:bg-[#262626] text-[#e2b245] hover:text-yellow-400 font-semibold px-2.5 py-1.5 rounded-lg border border-[#e2b245]/30 transition-all flex items-center gap-1">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-          GPS
-        </button>
-      </div>
-    </div>
-
-    <!-- Campo de Busca -->
-    <div class="flex gap-2">
-      <input 
-        type="text" 
-        id="destino-input" 
-        placeholder="Para onde vamos economizando bateria?" 
-        class="w-full min-w-0 bg-[#161616] text-sm text-white placeholder-gray-500 px-3.5 py-2.5 rounded-xl border border-zinc-800 focus:outline-none focus:border-[#e2b245] transition"
-        onkeypress="if(event.key === 'Enter') buscarEndereco()"
-      />
-      <button 
-        onclick="buscarEndereco()" 
-        class="bg-gradient-to-r from-yellow-400 to-[#e2b245] hover:brightness-110 text-black font-extrabold px-5 py-2.5 rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(226,178,69,0.25)] shrink-0 whitespace-nowrap">
-        Ir
-      </button>
-    </div>
-
-    <!-- Painel de Informações da Rota & Economia de Bateria -->
-    <div id="info-rota" class="hidden mt-3 pt-3 border-t border-zinc-800 grid grid-cols-3 gap-2 text-center text-sm">
-      <div>
-        <p class="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Distância</p>
-        <p id="distancia-texto" class="font-extrabold text-base text-white">0 km</p>
-      </div>
-      <div>
-        <p class="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Tempo</p>
-        <p id="tempo-texto" class="font-extrabold text-base text-[#e2b245]">0 min</p>
-      </div>
-      <div>
-        <p class="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Relevo / Bateria</p>
-        <p id="relevo-texto" class="font-extrabold text-xs text-green-400 mt-1">Plano ⚡</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Indicador de Velocidade Flutuante (Estilo Waze / Foco em Autonomia) -->
-  <div class="fixed top-36 left-4 z-10 bg-[#0f0f0f]/90 backdrop-blur-md px-3 py-2 rounded-xl border border-[#e2b245]/30 shadow-lg flex flex-col items-center">
-    <span id="velocidade-valor" class="text-2xl font-black text-[#e2b245] tracking-tight">0</span>
-    <span class="text-[9px] uppercase tracking-widest text-zinc-400 font-bold">km/h</span>
-  </div>
-
-  <!-- Banner Promocional do Rodapé (Compacto e Fechável) -->
-  <div id="ad-gotrix" class="fixed bottom-6 left-4 right-4 z-10 max-w-md mx-auto bg-[#121212]/95 backdrop-blur-md p-3.5 rounded-2xl border border-[#e2b245]/30 shadow-[0_10px_30px_rgba(0,0,0,0.85)] transition-all duration-300">
-    <button onclick="fecharAnuncio()" title="Fechar anúncio" class="absolute -top-2.5 -right-2.5 bg-[#1a1a1a] hover:bg-zinc-800 text-zinc-300 hover:text-[#e2b245] p-1.5 rounded-full border border-zinc-700 shadow-md transition-all">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
-    </button>
-
-    <div class="flex items-center gap-3">
-      <div class="w-12 h-12 bg-zinc-900 rounded-xl border border-[#e2b245]/20 flex-shrink-0 flex items-center justify-center text-[#e2b245]">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="5.5" cy="17.5" r="2.5"/>
-          <circle cx="18.5" cy="17.5" r="2.5"/>
-          <path d="M15 6h3l1.5 9"/>
-          <path d="M8 17.5h7l2-5.5h-4"/>
-          <path d="M16 6h2"/>
+  <!-- 1. BARRA SUPERIOR DE MANOBRA (Estilo Waze na identidade GoTrix) -->
+  <header class="fixed top-0 left-0 right-0 z-20 bg-[#0a0a0a] border-b border-[#e2b245]/30 px-4 py-3.5 shadow-[0_8px_24px_rgba(0,0,0,0.85)]">
+    <div class="max-w-md mx-auto flex items-center gap-4">
+      <!-- Ícone da Próxima Manobra -->
+      <div id="icone-manobra" class="w-12 h-12 flex items-center justify-center shrink-0 text-white">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 18V9a4 4 0 0 1 4-4h6" />
+          <polyline points="15 1 19 5 15 9" />
         </svg>
       </div>
 
-      <div class="flex-grow min-w-0">
-        <span class="text-[9px] uppercase tracking-widest text-[#e2b245] font-extrabold bg-[#e2b245]/10 px-1.5 py-0.5 rounded">
-          GoTrix Mobilidade
-        </span>
-        <h3 class="text-xs font-bold text-white mt-1 truncate">Sua scooter nova está aqui!</h3>
-        <p class="text-[11px] text-zinc-300 truncate">Rua Sete de Setembro, 123 - Centro</p>
+      <!-- Distância e Nome da Rua de Manobra -->
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center justify-between">
+          <p id="distancia-manobra" class="text-2xl font-black tracking-tight text-white leading-none">
+            Pronto
+          </p>
+          <span class="text-[10px] font-black italic tracking-wider text-[#e2b245] border border-[#e2b245]/40 px-2 py-0.5 rounded bg-[#e2b245]/10">
+            GoTrix GPS
+          </span>
+        </div>
+        <p id="rua-manobra" class="text-sm font-semibold text-[#e2b245] truncate mt-1">
+          Toque na lupa abaixo ou no mapa
+        </p>
       </div>
+    </div>
+  </header>
 
-      <a href="https://gotrixoficial.com.br" target="_blank" class="bg-gradient-to-r from-yellow-400 to-[#e2b245] hover:brightness-110 text-black font-extrabold text-xs px-3.5 py-2.5 rounded-xl transition-all shrink-0 whitespace-nowrap">
-        Conhecer
+  <!-- MODAL DE BUSCA (Abre ao clicar na Lupa do rodapé) -->
+  <div id="modal-busca" class="hidden fixed inset-x-0 top-20 z-30 px-4">
+    <div class="max-w-md mx-auto bg-[#121212]/98 backdrop-blur-md p-4 rounded-2xl border border-[#e2b245]/40 shadow-2xl">
+      <div class="flex items-center justify-between mb-2.5">
+        <span class="text-xs font-bold uppercase tracking-wider text-[#e2b245]">Definir Destino Eco</span>
+        <button onclick="toggleBusca()" class="text-zinc-400 hover:text-white text-xs font-bold px-2 py-1">Fechar ✕</button>
+      </div>
+      <div class="flex gap-2">
+        <input 
+          type="text" 
+          id="destino-input" 
+          placeholder="Digite o endereço ou local..." 
+          class="w-full min-w-0 bg-[#1a1a1a] text-sm text-white placeholder-zinc-500 px-3.5 py-2.5 rounded-xl border border-zinc-700 focus:outline-none focus:border-[#e2b245]"
+          onkeypress="if(event.key === 'Enter') buscarEndereco()"
+        />
+        <button 
+          onclick="buscarEndereco()" 
+          class="bg-gradient-to-r from-yellow-400 to-[#e2b245] text-black font-extrabold px-5 py-2.5 rounded-xl text-sm shrink-0 whitespace-nowrap">
+          Ir
+        </button>
+      </div>
+      <div class="mt-2.5 flex items-center justify-between text-[11px] text-zinc-400">
+        <span>Modo do mapa (Ciclovias):</span>
+        <button id="btn-tema-mapa" onclick="alternarTemaMapa()" class="text-[#e2b245] font-bold underline">
+          Escuro (Alternar para Original)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BANNER PROMOCIONAL COMPACTO E FECHÁVEL (Abre pelo ícone direito ou na inicialização) -->
+  <div id="ad-gotrix" class="fixed bottom-40 left-4 right-4 z-20 max-w-md mx-auto bg-[#121212]/95 backdrop-blur-md p-3 rounded-2xl border border-[#e2b245]/40 shadow-2xl transition-all duration-300">
+    <button onclick="fecharAnuncio()" title="Fechar" class="absolute -top-2.5 -right-2.5 bg-[#1a1a1a] text-zinc-300 hover:text-[#e2b245] p-1.5 rounded-full border border-zinc-700 shadow">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+    </button>
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-zinc-900 rounded-xl border border-[#e2b245]/30 flex items-center justify-center text-[#e2b245] shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/>
+          <path d="M15 6h3l1.5 9"/><path d="M8 17.5h7l2-5.5h-4"/>
+        </svg>
+      </div>
+      <div class="min-w-0 flex-1">
+        <span class="text-[9px] uppercase tracking-wider text-[#e2b245] font-extrabold">Loja GoTrix Oficial</span>
+        <p class="text-xs font-bold text-white truncate">Test-drive e peças para sua scooter!</p>
+      </div>
+      <a href="https://gotrixoficial.com.br" target="_blank" class="bg-[#e2b245] text-black font-extrabold text-[11px] px-3 py-2 rounded-xl shrink-0">
+        Ver Loja
       </a>
     </div>
   </div>
 
-  <button id="btn-reabrir-ad" onclick="abrirAnuncio()" title="Ver ofertas GoTrix" class="hidden fixed bottom-6 right-4 z-10 bg-[#121212] text-[#e2b245] p-3 rounded-full border border-[#e2b245]/40 shadow-xl hover:bg-zinc-900 transition-all">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5a2 2 0 10-2 2h2z" /></svg>
-  </button>
+  <!-- ELEMENTOS FLUTUANTES ACIMA DO RODAPÉ (Velocímetro à esquerda, Via ao centro, Botão GPS à direita) -->
+  <div class="fixed bottom-20 left-0 right-0 z-20 px-4 pointer-events-none">
+    <div class="max-w-md mx-auto flex items-end justify-between">
+      
+      <!-- 2. INFERIOR ESQUERDO: Velocímetro Circular + Limite de Velocidade -->
+      <div class="relative pointer-events-auto">
+        <!-- Círculo de Limite de Velocidade (32 km/h padrão autopropelido/ciclovia) -->
+        <div class="absolute -top-2 -right-3 z-10 w-9 h-9 rounded-full bg-white border-[3px] border-red-500 flex items-center justify-center shadow-md">
+          <span id="limite-via" class="text-black font-black text-xs leading-none">32</span>
+        </div>
 
+        <!-- Mostrador Circular do Velocímetro -->
+        <div class="w-20 h-20 rounded-full bg-[#141414]/95 border-2 border-zinc-700 shadow-[0_6px_20px_rgba(0,0,0,0.85)] flex flex-col items-center justify-center relative">
+          <!-- Arco de progresso SVG -->
+          <svg class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="34" stroke="#27272a" stroke-width="5" fill="none" />
+            <circle id="arco-velocidade" cx="40" cy="40" r="34" stroke="#e2b245" stroke-width="5" fill="none" stroke-dasharray="213" stroke-dashoffset="213" stroke-linecap="round" />
+          </svg>
+          <span id="velocidade-valor" class="text-2xl font-black text-white leading-none z-10">0</span>
+          <span class="text-[10px] font-bold text-zinc-400 leading-none mt-0.5 z-10">km/h</span>
+        </div>
+      </div>
+
+      <!-- 3. INFERIOR CENTRO: Pílula com o nome da via atual -->
+      <div class="mb-1 px-3 py-1 rounded-full bg-[#e2b245] text-black font-extrabold text-xs shadow-lg border border-black/20 max-w-[145px] truncate pointer-events-auto">
+        <span id="via-atual-texto">Ciclovia / Via</span>
+      </div>
+
+      <!-- 4. INFERIOR DIREITO: Botão Circular Dourado (Centralizar GPS) -->
+      <button onclick="centralizarUsuario()" title="Centralizar minha Scooter" class="pointer-events-auto w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-[#d97706] border-[3px] border-white shadow-[0_6px_20px_rgba(0,0,0,0.8)] flex items-center justify-center active:scale-95 transition-transform">
+        <div class="w-7 h-7 rounded-full bg-white/30 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
+        </div>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- 5. RODAPÉ FIXO DIVIDIDO EM 3 PARTES (Lupa | Horário/Tempo/Distância | Loja/Menu) -->
+  <footer class="fixed bottom-0 left-0 right-0 z-20 h-16 bg-[#111111] border-t border-zinc-800 shadow-[0_-4px_20px_rgba(0,0,0,0.8)]">
+    <div class="max-w-md mx-auto h-full grid grid-cols-4 items-center">
+      
+      <!-- Esquerda: Botão Lupa (Pesquisar Destino) -->
+      <button onclick="toggleBusca()" class="h-full flex items-center justify-center border-r border-zinc-800 text-zinc-300 hover:text-[#e2b245] active:bg-zinc-900 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+
+      <!-- Centro (2 colunas): Chegada, Tempo, Relevo/Autonomia e Distância -->
+      <div onclick="alternarDetalhesRota()" class="col-span-2 h-full flex flex-col items-center justify-center px-2 cursor-pointer active:bg-zinc-900 transition">
+        <div class="flex items-center gap-2">
+          <span id="hora-chegada" class="text-lg font-black text-white leading-none">--:--</span>
+          <span id="badge-relevo" class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
+            Plano ⚡
+          </span>
+        </div>
+        <div class="flex items-center gap-1.5 text-xs font-bold text-zinc-400 mt-1">
+          <span id="tempo-texto">0 min</span>
+          <span class="w-4 h-4 rounded-full bg-[#e2b245] text-black inline-flex items-center justify-center text-[10px]">⌄</span>
+          <span id="distancia-texto">0 km</span>
+        </div>
+      </div>
+
+      <!-- Direita: Botão Ofertas / Perfil GoTrix -->
+      <button onclick="abrirAnuncio()" class="h-full flex flex-col items-center justify-center border-l border-zinc-800 text-[#e2b245] hover:bg-zinc-900 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+          <circle cx="12" cy="5" r="2"/><path d="M12 9v6m0 0l-3 5m3-5l3 5M7 11l5-2 5 2"/>
+        </svg>
+      </button>
+
+    </div>
+  </footer>
+
+  <!-- Mapa Principal -->
   <div id="map" class="mapa-escuro"></div>
 
   <script>
@@ -146,22 +205,30 @@
 
     const map = L.map('map', { zoomControl: false }).setView(posAtual, 16);
     
-    // Camada CyclOSM (Exibe ciclovias detalhadas e infraestrutura cicloviária)
+    // CyclOSM: destaca ciclovias, ciclofaixas e curvas de nível de relevo
     L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap &copy; CyclOSM',
       maxZoom: 20
     }).addTo(map);
+
+    function toggleBusca() {
+      const modal = document.getElementById('modal-busca');
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        document.getElementById('destino-input').focus();
+      }
+    }
 
     function alternarTemaMapa() {
       const mapDiv = document.getElementById('map');
       const btn = document.getElementById('btn-tema-mapa');
       if (mapaEscuroAtivo) {
         mapDiv.classList.remove('mapa-escuro');
-        btn.innerText = 'Mapa: Original';
+        btn.innerText = 'Original (Alternar para Escuro)';
         mapaEscuroAtivo = false;
       } else {
         mapDiv.classList.add('mapa-escuro');
-        btn.innerText = 'Mapa: Escuro';
+        btn.innerText = 'Escuro (Alternar para Original)';
         mapaEscuroAtivo = true;
       }
     }
@@ -226,20 +293,37 @@
       }
     }
 
+    function atualizarVelocimetro(kmh) {
+      const valEl = document.getElementById('velocidade-valor');
+      const arcoEl = document.getElementById('arco-velocidade');
+      valEl.innerText = kmh;
+
+      // Muda cor se ultrapassar 32 km/h (limite autopropelido)
+      if (kmh > 32) {
+        valEl.className = "text-2xl font-black text-red-500 leading-none z-10";
+        arcoEl.setAttribute("stroke", "#ef4444");
+      } else {
+        valEl.className = "text-2xl font-black text-white leading-none z-10";
+        arcoEl.setAttribute("stroke", "#e2b245");
+      }
+
+      // Preenche o arco circular (escala até 50 km/h)
+      const maxKmh = 50;
+      const perimetro = 213;
+      const progresso = Math.min(kmh / maxKmh, 1);
+      arcoEl.style.strokeDashoffset = perimetro - (perimetro * progresso);
+    }
+
     function fecharAnuncio() {
-      const banner = document.getElementById('ad-gotrix');
-      const btnAbrir = document.getElementById('btn-reabrir-ad');
-      banner.style.opacity = '0';
-      banner.style.transform = 'translateY(20px)';
-      setTimeout(() => { banner.classList.add('hidden'); btnAbrir.classList.remove('hidden'); }, 300);
+      document.getElementById('ad-gotrix').classList.add('hidden');
     }
 
     function abrirAnuncio() {
-      const banner = document.getElementById('ad-gotrix');
-      const btnAbrir = document.getElementById('btn-reabrir-ad');
-      btnAbrir.classList.add('hidden');
-      banner.classList.remove('hidden');
-      setTimeout(() => { banner.style.opacity = '1'; banner.style.transform = 'translateY(0)'; }, 50);
+      document.getElementById('ad-gotrix').classList.remove('hidden');
+    }
+
+    function alternarDetalhesRota() {
+      toggleBusca();
     }
 
     function iniciarGPS() {
@@ -249,19 +333,13 @@
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             const heading = position.coords.heading;
-            const speedMs = position.coords.speed; // Velocidade em metros por segundo
+            const speedMs = position.coords.speed;
             const primeiraVez = !marcadorUsuario;
             
             posAtual = [lat, lng];
 
-            // Atualiza Velocímetro na tela (converte m/s para km/h)
-            if (speedMs !== null && !isNaN(speedMs) && speedMs >= 0) {
-              const kmh = Math.round(speedMs * 3.6);
-              document.getElementById('velocidade-valor').innerText = kmh;
-            } else if (posAnterior) {
-              // Estimativa caso o navegador não retorne speed direto
-              document.getElementById('velocidade-valor').innerText = "0";
-            }
+            const kmh = (speedMs !== null && !isNaN(speedMs) && speedMs >= 0) ? Math.round(speedMs * 3.6) : 0;
+            atualizarVelocimetro(kmh);
 
             if (!marcadorUsuario) {
               marcadorUsuario = L.marker(posAtual, { icon: iconeScooterWaze, zIndexOffset: 1000 }).addTo(map);
@@ -272,15 +350,13 @@
             if (heading !== null && !isNaN(heading)) {
               atualizarRotacaoScooter(heading);
             } else if (posAnterior && (posAnterior[0] !== lat || posAnterior[1] !== lng)) {
-              const anguloCalculado = calcularDirecao(posAnterior[0], posAnterior[1], lat, lng);
-              atualizarRotacaoScooter(anguloCalculado);
+              atualizarRotacaoScooter(calcularDirecao(posAnterior[0], posAnterior[1], lat, lng));
             }
 
             posAnterior = [lat, lng];
             if (primeiraVez) map.setView(posAtual, 17);
           },
-          (erro) => {
-            console.warn("Erro ao obter GPS:", erro.message);
+          () => {
             if (!marcadorUsuario) marcadorUsuario = L.marker(posAtual, { icon: iconeScooterWaze, zIndexOffset: 1000 }).addTo(map);
           },
           { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
@@ -303,7 +379,9 @@
 
         if (data.features && data.features.length > 0) {
           const coords = data.features[0].geometry.coordinates;
-          definirDestinoECalcular(coords[1], coords[0]);
+          const nomeDestino = data.features[0].properties.name || query;
+          document.getElementById('modal-busca').classList.add('hidden');
+          definirDestinoECalcular(coords[1], coords[0], nomeDestino);
         } else {
           alert("Nenhum local encontrado.");
         }
@@ -313,10 +391,10 @@
     }
 
     map.on('click', (e) => {
-      definirDestinoECalcular(e.latlng.lat, e.latlng.lng);
+      definirDestinoECalcular(e.latlng.lat, e.latlng.lng, "Destino no mapa");
     });
 
-    async function definirDestinoECalcular(destLat, destLng) {
+    async function definirDestinoECalcular(destLat, destLng, nomeLocal = "Destino") {
       if (marcadorDestino) {
         marcadorDestino.setLatLng([destLat, destLng]);
       } else {
@@ -325,8 +403,7 @@
 
       const origemStr = `${posAtual[1]},${posAtual[0]}`;
       const destinoStr = `${destLng},${destLat}`;
-      // Usamos o perfil de bike do OSRM otimizado para ciclovias
-      const urlRota = `https://router.project-osrm.org/route/v1/bike/${origemStr};${destinoStr}?overview=full&geometries=geojson`;
+      const urlRota = `https://router.project-osrm.org/route/v1/bike/${origemStr};${destinoStr}?overview=full&steps=true&geometries=geojson`;
 
       try {
         const res = await fetch(urlRota);
@@ -337,13 +414,8 @@
           
           if (linhaRota) map.removeLayer(linhaRota);
 
-          // Rota em destaque com a cor Dourada GoTrix
           linhaRota = L.geoJSON(rota.geometry, {
-            style: { 
-              color: '#e2b245', 
-              weight: 7, 
-              opacity: 0.95
-            }
+            style: { color: '#e2b245', weight: 7, opacity: 0.95 }
           }).addTo(map);
 
           if (rota.geometry.coordinates && rota.geometry.coordinates.length > 1) {
@@ -352,28 +424,44 @@
             atualizarRotacaoScooter(calcularDirecao(p1[1], p1[0], p2[1], p2[0]));
           }
 
-          map.fitBounds(linhaRota.getBounds(), { padding: [90, 140] });
+          map.fitBounds(linhaRota.getBounds(), { padding: [100, 140] });
 
-          const distanciaKm = (rota.distance / 1000).toFixed(1);
-          const tempoMinutos = Math.round((rota.distance / 1000) / 20 * 60);
-
-          document.getElementById('distancia-texto').innerText = `${distanciaKm} km`;
-          document.getElementById('tempo-texto').innerText = `${tempoMinutos < 1 ? 1 : tempoMinutos} min`;
-          
-          // Simulação inteligente de análise de relevo para economia de bateria
-          const elementoRelevo = document.getElementById('relevo-texto');
-          if (distanciaKm > 4) {
-            elementoRelevo.innerText = "Moderado ⚠️";
-            elementoRelevo.className = "font-extrabold text-xs text-yellow-400 mt-1";
-          } else {
-            elementoRelevo.innerText = "Plano ⚡";
-            elementoRelevo.className = "font-extrabold text-xs text-green-400 mt-1";
+          // Atualiza barra superior com a próxima instrução real da via
+          const passos = rota.legs[0].steps;
+          if (passos && passos.length > 0) {
+            const proxPasso = passos.length > 1 ? passos[1] : passos[0];
+            const distPasso = proxPasso.distance >= 1000 
+              ? `${(proxPasso.distance / 1000).toFixed(1)} km` 
+              : `${Math.round(proxPasso.distance)} m`;
+            
+            document.getElementById('distancia-manobra').innerText = distPasso;
+            document.getElementById('rua-manobra').innerText = proxPasso.name || nomeLocal;
+            document.getElementById('via-atual-texto').innerText = passos[0].name || "Via Local";
           }
 
-          document.getElementById('info-rota').classList.remove('hidden');
+          const distanciaKm = (rota.distance / 1000).toFixed(1);
+          const tempoMinutos = Math.max(1, Math.round((rota.distance / 1000) / 20 * 60));
+
+          // Calcula hora estimada de chegada
+          const chegada = new Date(Date.now() + tempoMinutos * 60000);
+          const horaFormatada = chegada.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+          document.getElementById('hora-chegada').innerText = horaFormatada;
+          document.getElementById('distancia-texto').innerText = `${distanciaKm} km`;
+          document.getElementById('tempo-texto').innerText = `${tempoMinutos} min`;
+
+          // Indicador de relevo/autonomia no rodapé
+          const badgeRelevo = document.getElementById('badge-relevo');
+          if (distanciaKm > 4) {
+            badgeRelevo.innerText = "Subidas ⚠️";
+            badgeRelevo.className = "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400";
+          } else {
+            badgeRelevo.innerText = "Plano ⚡";
+            badgeRelevo.className = "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400";
+          }
         }
       } catch (e) {
-        alert("Erro ao traçar rota econômica.");
+        alert("Erro ao traçar rota.");
       }
     }
 
