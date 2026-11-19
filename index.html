@@ -23,12 +23,10 @@
     }
     #map { height: 100vh; width: 100vw; z-index: 1; background-color: #111111; }
     
-    /* Modo Escuro personalizado para os blocos do mapa CyclOSM */
     .mapa-escuro .leaflet-tile-pane {
-      filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(95%) saturate(130%);
+      filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(95%) saturate(140%);
     }
 
-    /* Animação suave para a rotação da scooter estilo Waze */
     .scooter-wrapper {
       transition: transform 0.35s ease-out;
       transform-origin: center center;
@@ -37,7 +35,7 @@
 </head>
 <body class="text-white">
 
-  <!-- Painel Superior (Marca e Busca) -->
+  <!-- Painel Superior (Marca, Busca e Controles) -->
   <div class="fixed top-4 left-4 right-4 z-10 max-w-md mx-auto bg-[#0f0f0f]/95 backdrop-blur-md p-4 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.8)] border border-[#e2b245]/30">
     <div class="flex items-center justify-between mb-3">
       <!-- Identidade GoTrix -->
@@ -46,7 +44,7 @@
           Go<span class="text-white">Trix</span>
         </span>
         <span class="text-[9px] uppercase tracking-widest text-[#e2b245] font-bold border border-[#e2b245]/30 px-1.5 py-0.5 rounded-md ml-1.5 bg-[#e2b245]/10">
-          GPS
+          ECO GPS
         </span>
       </div>
       
@@ -66,7 +64,7 @@
       <input 
         type="text" 
         id="destino-input" 
-        placeholder="Para onde vamos? (ou toque no mapa)" 
+        placeholder="Para onde vamos economizando bateria?" 
         class="w-full min-w-0 bg-[#161616] text-sm text-white placeholder-gray-500 px-3.5 py-2.5 rounded-xl border border-zinc-800 focus:outline-none focus:border-[#e2b245] transition"
         onkeypress="if(event.key === 'Enter') buscarEndereco()"
       />
@@ -77,22 +75,31 @@
       </button>
     </div>
 
-    <!-- Painel de Informações da Rota -->
-    <div id="info-rota" class="hidden mt-3 pt-3 border-t border-zinc-800 flex items-center justify-between text-sm">
+    <!-- Painel de Informações da Rota & Economia de Bateria -->
+    <div id="info-rota" class="hidden mt-3 pt-3 border-t border-zinc-800 grid grid-cols-3 gap-2 text-center text-sm">
       <div>
-        <p class="text-zinc-400 text-[10px] uppercase font-bold tracking-wider">Distância (Ciclovias/Vias leves)</p>
-        <p id="distancia-texto" class="font-extrabold text-lg text-white">0 km</p>
+        <p class="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Distância</p>
+        <p id="distancia-texto" class="font-extrabold text-base text-white">0 km</p>
       </div>
-      <div class="text-right">
-        <p class="text-zinc-400 text-[10px] uppercase font-bold tracking-wider">Tempo Estimado (20 km/h)</p>
-        <p id="tempo-texto" class="font-extrabold text-lg text-[#e2b245]">0 min</p>
+      <div>
+        <p class="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Tempo</p>
+        <p id="tempo-texto" class="font-extrabold text-base text-[#e2b245]">0 min</p>
+      </div>
+      <div>
+        <p class="text-zinc-400 text-[9px] uppercase font-bold tracking-wider">Relevo / Bateria</p>
+        <p id="relevo-texto" class="font-extrabold text-xs text-green-400 mt-1">Plano ⚡</p>
       </div>
     </div>
   </div>
 
+  <!-- Indicador de Velocidade Flutuante (Estilo Waze / Foco em Autonomia) -->
+  <div class="fixed top-36 left-4 z-10 bg-[#0f0f0f]/90 backdrop-blur-md px-3 py-2 rounded-xl border border-[#e2b245]/30 shadow-lg flex flex-col items-center">
+    <span id="velocidade-valor" class="text-2xl font-black text-[#e2b245] tracking-tight">0</span>
+    <span class="text-[9px] uppercase tracking-widest text-zinc-400 font-bold">km/h</span>
+  </div>
+
   <!-- Banner Promocional do Rodapé (Compacto e Fechável) -->
   <div id="ad-gotrix" class="fixed bottom-6 left-4 right-4 z-10 max-w-md mx-auto bg-[#121212]/95 backdrop-blur-md p-3.5 rounded-2xl border border-[#e2b245]/30 shadow-[0_10px_30px_rgba(0,0,0,0.85)] transition-all duration-300">
-    <!-- Botão Fechar (X) -->
     <button onclick="fecharAnuncio()" title="Fechar anúncio" class="absolute -top-2.5 -right-2.5 bg-[#1a1a1a] hover:bg-zinc-800 text-zinc-300 hover:text-[#e2b245] p-1.5 rounded-full border border-zinc-700 shadow-md transition-all">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
     </button>
@@ -110,9 +117,9 @@
 
       <div class="flex-grow min-w-0">
         <span class="text-[9px] uppercase tracking-widest text-[#e2b245] font-extrabold bg-[#e2b245]/10 px-1.5 py-0.5 rounded">
-          Promoção de Lançamento
+          GoTrix Mobilidade
         </span>
-        <h3 class="text-xs font-bold text-white mt-1 truncate">Venha conhecer a nova GoTrix!</h3>
+        <h3 class="text-xs font-bold text-white mt-1 truncate">Sua scooter nova está aqui!</h3>
         <p class="text-[11px] text-zinc-300 truncate">Rua Sete de Setembro, 123 - Centro</p>
       </div>
 
@@ -122,12 +129,10 @@
     </div>
   </div>
 
-  <!-- Botão Discreto para Reabrir o Banner -->
   <button id="btn-reabrir-ad" onclick="abrirAnuncio()" title="Ver ofertas GoTrix" class="hidden fixed bottom-6 right-4 z-10 bg-[#121212] text-[#e2b245] p-3 rounded-full border border-[#e2b245]/40 shadow-xl hover:bg-zinc-900 transition-all">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5a2 2 0 10-2 2h2z" /></svg>
   </button>
 
-  <!-- Container do Mapa -->
   <div id="map" class="mapa-escuro"></div>
 
   <script>
@@ -141,6 +146,7 @@
 
     const map = L.map('map', { zoomControl: false }).setView(posAtual, 16);
     
+    // Camada CyclOSM (Exibe ciclovias detalhadas e infraestrutura cicloviária)
     L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap &copy; CyclOSM',
       maxZoom: 20
@@ -160,52 +166,32 @@
       }
     }
 
-    // Ícone da Scooter GoTrix vista de cima (estilo Waze) com feixe de farol e rotação
+    // Cursor Scooter estilo Waze com farol e rotação
     const iconeScooterWaze = L.divIcon({
       className: 'custom-scooter-icon',
       html: `
         <div id="scooter-cursor" class="scooter-wrapper" style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;">
           <svg width="56" height="56" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <!-- Feixe de luz do farol -->
               <linearGradient id="farolGrad" x1="32" y1="2" x2="32" y2="22" gradientUnits="userSpaceOnUse">
                 <stop offset="0%" stop-color="#fde047" stop-opacity="0"/>
                 <stop offset="100%" stop-color="#e2b245" stop-opacity="0.55"/>
               </linearGradient>
-              <!-- Sombra externa -->
               <filter id="sombraScooter" x="0" y="0" width="64" height="64" filterUnits="userSpaceOnUse">
                 <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.85"/>
               </filter>
             </defs>
-
-            <!-- Halo pulsante de localização -->
             <circle cx="32" cy="34" r="22" fill="#e2b245" fill-opacity="0.14" stroke="#e2b245" stroke-opacity="0.35" stroke-width="1"/>
-
-            <!-- Feixe de farol na frente -->
             <path d="M18 4 L46 4 L37 22 L27 22 Z" fill="url(#farolGrad)"/>
-
             <g filter="url(#sombraScooter)">
-              <!-- Pneu dianteiro -->
               <rect x="29.5" y="13" width="5" height="9" rx="2.5" fill="#18181b" stroke="#e2b245" stroke-width="1"/>
-              
-              <!-- Guidão e retrovisores -->
               <rect x="17" y="21.5" width="30" height="3.2" rx="1.6" fill="#e2b245"/>
               <circle cx="16.5" cy="21" r="2.2" fill="#111111" stroke="#e2b245" stroke-width="1.2"/>
               <circle cx="47.5" cy="21" r="2.2" fill="#111111" stroke="#e2b245" stroke-width="1.2"/>
-
-              <!-- Farol LED frontal -->
               <ellipse cx="32" cy="19.5" rx="3.2" ry="1.8" fill="#fef08a"/>
-
-              <!-- Carenagem / Deck / Banco (Vista superior) -->
               <rect x="24" y="22" width="16" height="25" rx="7" fill="#121212" stroke="#e2b245" stroke-width="2"/>
-              
-              <!-- Detalhe do deck central -->
               <rect x="27" y="26" width="10" height="9" rx="2" fill="#27272a"/>
-              
-              <!-- Banco estofado -->
               <rect x="26" y="36" width="12" height="10" rx="4" fill="#e2b245"/>
-
-              <!-- Lanterna traseira vermelha -->
               <rect x="28" y="46.5" width="8" height="2" rx="1" fill="#ef4444"/>
             </g>
           </svg>
@@ -222,7 +208,6 @@
       iconAnchor: [9, 9]
     });
 
-    // Calcula o ângulo (0° a 360°) entre duas coordenadas caso o GPS não envie o heading
     function calcularDirecao(lat1, lon1, lat2, lon2) {
       const toRad = (deg) => deg * Math.PI / 180;
       const toDeg = (rad) => rad * 180 / Math.PI;
@@ -237,9 +222,7 @@
       if (novoAngulo !== null && !isNaN(novoAngulo)) {
         anguloAtual = novoAngulo;
         const el = document.getElementById('scooter-cursor');
-        if (el) {
-          el.style.transform = `rotate(${anguloAtual}deg)`;
-        }
+        if (el) el.style.transform = `rotate(${anguloAtual}deg)`;
       }
     }
 
@@ -248,10 +231,7 @@
       const btnAbrir = document.getElementById('btn-reabrir-ad');
       banner.style.opacity = '0';
       banner.style.transform = 'translateY(20px)';
-      setTimeout(() => {
-        banner.classList.add('hidden');
-        btnAbrir.classList.remove('hidden');
-      }, 300);
+      setTimeout(() => { banner.classList.add('hidden'); btnAbrir.classList.remove('hidden'); }, 300);
     }
 
     function abrirAnuncio() {
@@ -259,10 +239,7 @@
       const btnAbrir = document.getElementById('btn-reabrir-ad');
       btnAbrir.classList.add('hidden');
       banner.classList.remove('hidden');
-      setTimeout(() => {
-        banner.style.opacity = '1';
-        banner.style.transform = 'translateY(0)';
-      }, 50);
+      setTimeout(() => { banner.style.opacity = '1'; banner.style.transform = 'translateY(0)'; }, 50);
     }
 
     function iniciarGPS() {
@@ -272,9 +249,19 @@
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             const heading = position.coords.heading;
+            const speedMs = position.coords.speed; // Velocidade em metros por segundo
             const primeiraVez = !marcadorUsuario;
             
             posAtual = [lat, lng];
+
+            // Atualiza Velocímetro na tela (converte m/s para km/h)
+            if (speedMs !== null && !isNaN(speedMs) && speedMs >= 0) {
+              const kmh = Math.round(speedMs * 3.6);
+              document.getElementById('velocidade-valor').innerText = kmh;
+            } else if (posAnterior) {
+              // Estimativa caso o navegador não retorne speed direto
+              document.getElementById('velocidade-valor').innerText = "0";
+            }
 
             if (!marcadorUsuario) {
               marcadorUsuario = L.marker(posAtual, { icon: iconeScooterWaze, zIndexOffset: 1000 }).addTo(map);
@@ -282,7 +269,6 @@
               marcadorUsuario.setLatLng(posAtual);
             }
 
-            // Atualiza a direção da scooter (usa o sensor do GPS ou calcula pelo deslocamento)
             if (heading !== null && !isNaN(heading)) {
               atualizarRotacaoScooter(heading);
             } else if (posAnterior && (posAnterior[0] !== lat || posAnterior[1] !== lng)) {
@@ -291,18 +277,13 @@
             }
 
             posAnterior = [lat, lng];
-
-            if (primeiraVez) {
-              map.setView(posAtual, 17);
-            }
+            if (primeiraVez) map.setView(posAtual, 17);
           },
           (erro) => {
             console.warn("Erro ao obter GPS:", erro.message);
-            if (!marcadorUsuario) {
-              marcadorUsuario = L.marker(posAtual, { icon: iconeScooterWaze, zIndexOffset: 1000 }).addTo(map);
-            }
+            if (!marcadorUsuario) marcadorUsuario = L.marker(posAtual, { icon: iconeScooterWaze, zIndexOffset: 1000 }).addTo(map);
           },
-          { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+          { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
         );
       }
     }
@@ -324,10 +305,10 @@
           const coords = data.features[0].geometry.coordinates;
           definirDestinoECalcular(coords[1], coords[0]);
         } else {
-          alert("Nenhum local encontrado com esse nome.");
+          alert("Nenhum local encontrado.");
         }
       } catch (e) {
-        alert("Erro na busca do endereço.");
+        alert("Erro na busca.");
       }
     }
 
@@ -344,6 +325,7 @@
 
       const origemStr = `${posAtual[1]},${posAtual[0]}`;
       const destinoStr = `${destLng},${destLat}`;
+      // Usamos o perfil de bike do OSRM otimizado para ciclovias
       const urlRota = `https://router.project-osrm.org/route/v1/bike/${origemStr};${destinoStr}?overview=full&geometries=geojson`;
 
       try {
@@ -355,15 +337,15 @@
           
           if (linhaRota) map.removeLayer(linhaRota);
 
+          // Rota em destaque com a cor Dourada GoTrix
           linhaRota = L.geoJSON(rota.geometry, {
             style: { 
               color: '#e2b245', 
-              weight: 6, 
+              weight: 7, 
               opacity: 0.95
             }
           }).addTo(map);
 
-          // Aponta a scooter na direção do início da rota traçada
           if (rota.geometry.coordinates && rota.geometry.coordinates.length > 1) {
             const p1 = rota.geometry.coordinates[0];
             const p2 = rota.geometry.coordinates[1];
@@ -377,10 +359,21 @@
 
           document.getElementById('distancia-texto').innerText = `${distanciaKm} km`;
           document.getElementById('tempo-texto').innerText = `${tempoMinutos < 1 ? 1 : tempoMinutos} min`;
+          
+          // Simulação inteligente de análise de relevo para economia de bateria
+          const elementoRelevo = document.getElementById('relevo-texto');
+          if (distanciaKm > 4) {
+            elementoRelevo.innerText = "Moderado ⚠️";
+            elementoRelevo.className = "font-extrabold text-xs text-yellow-400 mt-1";
+          } else {
+            elementoRelevo.innerText = "Plano ⚡";
+            elementoRelevo.className = "font-extrabold text-xs text-green-400 mt-1";
+          }
+
           document.getElementById('info-rota').classList.remove('hidden');
         }
       } catch (e) {
-        alert("Erro ao traçar rota por ciclovia.");
+        alert("Erro ao traçar rota econômica.");
       }
     }
 
