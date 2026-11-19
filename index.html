@@ -23,9 +23,15 @@
     }
     #map { height: 100vh; width: 100vw; z-index: 1; background-color: #111111; }
     
-    /* Modo Escuro personalizado para os blocos do mapa CyclOSM sem exigir API Key */
+    /* Modo Escuro personalizado para os blocos do mapa CyclOSM */
     .mapa-escuro .leaflet-tile-pane {
       filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(95%) saturate(130%);
+    }
+
+    /* Animação suave para a rotação da scooter estilo Waze */
+    .scooter-wrapper {
+      transition: transform 0.35s ease-out;
+      transform-origin: center center;
     }
   </style>
 </head>
@@ -45,7 +51,6 @@
       </div>
       
       <div class="flex items-center gap-1.5">
-        <!-- Botão para alternar tema do mapa (Escuro / Claro CyclOSM original) -->
         <button id="btn-tema-mapa" onclick="alternarTemaMapa()" class="text-xs bg-[#1a1a1a] hover:bg-[#262626] text-zinc-300 font-medium px-2.5 py-1.5 rounded-lg border border-zinc-700 transition-all">
           Mapa: Escuro
         </button>
@@ -93,7 +98,6 @@
     </button>
 
     <div class="flex items-center gap-3">
-      <!-- Ícone Vetorial da Scooter GoTrix (Nunca quebra) -->
       <div class="w-12 h-12 bg-zinc-900 rounded-xl border border-[#e2b245]/20 flex-shrink-0 flex items-center justify-center text-[#e2b245]">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="5.5" cy="17.5" r="2.5"/>
@@ -104,7 +108,6 @@
         </svg>
       </div>
 
-      <!-- Texto e Conteúdo -->
       <div class="flex-grow min-w-0">
         <span class="text-[9px] uppercase tracking-widest text-[#e2b245] font-extrabold bg-[#e2b245]/10 px-1.5 py-0.5 rounded">
           Promoção de Lançamento
@@ -113,7 +116,6 @@
         <p class="text-[11px] text-zinc-300 truncate">Rua Sete de Setembro, 123 - Centro</p>
       </div>
 
-      <!-- Botão de Ação -->
       <a href="https://gotrixoficial.com.br" target="_blank" class="bg-gradient-to-r from-yellow-400 to-[#e2b245] hover:brightness-110 text-black font-extrabold text-xs px-3.5 py-2.5 rounded-xl transition-all shrink-0 whitespace-nowrap">
         Conhecer
       </a>
@@ -125,30 +127,28 @@
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5a2 2 0 10-2 2h2z" /></svg>
   </button>
 
-  <!-- Container do Mapa (Inicia com modo escuro sobre o CyclOSM) -->
+  <!-- Container do Mapa -->
   <div id="map" class="mapa-escuro"></div>
 
   <script>
-    // Coordenada inicial padrão (São José dos Pinhais / Curitiba)
     let posAtual = [-25.5347, -49.2064]; 
+    let posAnterior = null;
+    let anguloAtual = 0;
     let marcadorUsuario = null;
     let marcadorDestino = null;
     let linhaRota = null;
     let mapaEscuroAtivo = true;
 
-    // Inicializa o Mapa sem chave de API usando CyclOSM (100% gratuito e mostra todas as ciclovias)
-    const map = L.map('map', { zoomControl: false }).setView(posAtual, 15);
+    const map = L.map('map', { zoomControl: false }).setView(posAtual, 16);
     
     L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap &copy; CyclOSM',
       maxZoom: 20
     }).addTo(map);
 
-    // Alternar entre Mapa Escuro (identidade GoTrix) e Mapa Original CyclOSM (cores reais das ciclovias)
     function alternarTemaMapa() {
       const mapDiv = document.getElementById('map');
       const btn = document.getElementById('btn-tema-mapa');
-      
       if (mapaEscuroAtivo) {
         mapDiv.classList.remove('mapa-escuro');
         btn.innerText = 'Mapa: Original';
@@ -160,12 +160,59 @@
       }
     }
 
-    // Ícones customizados (Preto e Dourado)
-    const iconeUsuario = L.divIcon({
-      className: 'custom-div-icon',
-      html: `<div style="background-color:#e2b245; width:18px; height:18px; border-radius:50%; border:3px solid #000; box-shadow: 0 0 15px rgba(226,178,69,0.9);"></div>`,
-      iconSize: [18, 18],
-      iconAnchor: [9, 9]
+    // Ícone da Scooter GoTrix vista de cima (estilo Waze) com feixe de farol e rotação
+    const iconeScooterWaze = L.divIcon({
+      className: 'custom-scooter-icon',
+      html: `
+        <div id="scooter-cursor" class="scooter-wrapper" style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;">
+          <svg width="56" height="56" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <!-- Feixe de luz do farol -->
+              <linearGradient id="farolGrad" x1="32" y1="2" x2="32" y2="22" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#fde047" stop-opacity="0"/>
+                <stop offset="100%" stop-color="#e2b245" stop-opacity="0.55"/>
+              </linearGradient>
+              <!-- Sombra externa -->
+              <filter id="sombraScooter" x="0" y="0" width="64" height="64" filterUnits="userSpaceOnUse">
+                <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.85"/>
+              </filter>
+            </defs>
+
+            <!-- Halo pulsante de localização -->
+            <circle cx="32" cy="34" r="22" fill="#e2b245" fill-opacity="0.14" stroke="#e2b245" stroke-opacity="0.35" stroke-width="1"/>
+
+            <!-- Feixe de farol na frente -->
+            <path d="M18 4 L46 4 L37 22 L27 22 Z" fill="url(#farolGrad)"/>
+
+            <g filter="url(#sombraScooter)">
+              <!-- Pneu dianteiro -->
+              <rect x="29.5" y="13" width="5" height="9" rx="2.5" fill="#18181b" stroke="#e2b245" stroke-width="1"/>
+              
+              <!-- Guidão e retrovisores -->
+              <rect x="17" y="21.5" width="30" height="3.2" rx="1.6" fill="#e2b245"/>
+              <circle cx="16.5" cy="21" r="2.2" fill="#111111" stroke="#e2b245" stroke-width="1.2"/>
+              <circle cx="47.5" cy="21" r="2.2" fill="#111111" stroke="#e2b245" stroke-width="1.2"/>
+
+              <!-- Farol LED frontal -->
+              <ellipse cx="32" cy="19.5" rx="3.2" ry="1.8" fill="#fef08a"/>
+
+              <!-- Carenagem / Deck / Banco (Vista superior) -->
+              <rect x="24" y="22" width="16" height="25" rx="7" fill="#121212" stroke="#e2b245" stroke-width="2"/>
+              
+              <!-- Detalhe do deck central -->
+              <rect x="27" y="26" width="10" height="9" rx="2" fill="#27272a"/>
+              
+              <!-- Banco estofado -->
+              <rect x="26" y="36" width="12" height="10" rx="4" fill="#e2b245"/>
+
+              <!-- Lanterna traseira vermelha -->
+              <rect x="28" y="46.5" width="8" height="2" rx="1" fill="#ef4444"/>
+            </g>
+          </svg>
+        </div>
+      `,
+      iconSize: [56, 56],
+      iconAnchor: [28, 28]
     });
 
     const iconeDestino = L.divIcon({
@@ -175,7 +222,27 @@
       iconAnchor: [9, 9]
     });
 
-    // Fechar/Ocultar anúncio
+    // Calcula o ângulo (0° a 360°) entre duas coordenadas caso o GPS não envie o heading
+    function calcularDirecao(lat1, lon1, lat2, lon2) {
+      const toRad = (deg) => deg * Math.PI / 180;
+      const toDeg = (rad) => rad * 180 / Math.PI;
+      const dLon = toRad(lon2 - lon1);
+      const y = Math.sin(dLon) * Math.cos(toRad(lat2));
+      const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+                Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+      return (toDeg(Math.atan2(y, x)) + 360) % 360;
+    }
+
+    function atualizarRotacaoScooter(novoAngulo) {
+      if (novoAngulo !== null && !isNaN(novoAngulo)) {
+        anguloAtual = novoAngulo;
+        const el = document.getElementById('scooter-cursor');
+        if (el) {
+          el.style.transform = `rotate(${anguloAtual}deg)`;
+        }
+      }
+    }
+
     function fecharAnuncio() {
       const banner = document.getElementById('ad-gotrix');
       const btnAbrir = document.getElementById('btn-reabrir-ad');
@@ -187,7 +254,6 @@
       }, 300);
     }
 
-    // Reabrir anúncio
     function abrirAnuncio() {
       const banner = document.getElementById('ad-gotrix');
       const btnAbrir = document.getElementById('btn-reabrir-ad');
@@ -199,42 +265,52 @@
       }, 50);
     }
 
-    // GPS em tempo real
     function iniciarGPS() {
       if ("geolocation" in navigator) {
         navigator.geolocation.watchPosition(
           (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
+            const heading = position.coords.heading;
             const primeiraVez = !marcadorUsuario;
+            
             posAtual = [lat, lng];
 
             if (!marcadorUsuario) {
-              marcadorUsuario = L.marker(posAtual, { icon: iconeUsuario }).addTo(map);
+              marcadorUsuario = L.marker(posAtual, { icon: iconeScooterWaze, zIndexOffset: 1000 }).addTo(map);
             } else {
               marcadorUsuario.setLatLng(posAtual);
             }
 
+            // Atualiza a direção da scooter (usa o sensor do GPS ou calcula pelo deslocamento)
+            if (heading !== null && !isNaN(heading)) {
+              atualizarRotacaoScooter(heading);
+            } else if (posAnterior && (posAnterior[0] !== lat || posAnterior[1] !== lng)) {
+              const anguloCalculado = calcularDirecao(posAnterior[0], posAnterior[1], lat, lng);
+              atualizarRotacaoScooter(anguloCalculado);
+            }
+
+            posAnterior = [lat, lng];
+
             if (primeiraVez) {
-              map.setView(posAtual, 16);
+              map.setView(posAtual, 17);
             }
           },
           (erro) => {
             console.warn("Erro ao obter GPS:", erro.message);
             if (!marcadorUsuario) {
-              marcadorUsuario = L.marker(posAtual, { icon: iconeUsuario }).addTo(map);
+              marcadorUsuario = L.marker(posAtual, { icon: iconeScooterWaze, zIndexOffset: 1000 }).addTo(map);
             }
           },
-          { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+          { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
         );
       }
     }
 
     function centralizarUsuario() {
-      map.flyTo(posAtual, 16);
+      map.flyTo(posAtual, 17);
     }
 
-    // Busca Endereço (Photon)
     async function buscarEndereco() {
       const query = document.getElementById('destino-input').value.trim();
       if (!query) return;
@@ -255,12 +331,10 @@
       }
     }
 
-    // Clique no mapa para definir destino
     map.on('click', (e) => {
       definirDestinoECalcular(e.latlng.lat, e.latlng.lng);
     });
 
-    // Roteador de ciclovias OSRM
     async function definirDestinoECalcular(destLat, destLng) {
       if (marcadorDestino) {
         marcadorDestino.setLatLng([destLat, destLng]);
@@ -288,6 +362,13 @@
               opacity: 0.95
             }
           }).addTo(map);
+
+          // Aponta a scooter na direção do início da rota traçada
+          if (rota.geometry.coordinates && rota.geometry.coordinates.length > 1) {
+            const p1 = rota.geometry.coordinates[0];
+            const p2 = rota.geometry.coordinates[1];
+            atualizarRotacaoScooter(calcularDirecao(p1[1], p1[0], p2[1], p2[0]));
+          }
 
           map.fitBounds(linhaRota.getBounds(), { padding: [90, 140] });
 
