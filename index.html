@@ -97,12 +97,12 @@
   <div onclick="toggleBusca()" title="Ajustar carga atual e voltagem da bateria" class="fixed top-24 left-4 z-20 flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition">
     <div class="w-4 h-1.5 rounded-t bg-zinc-400"></div>
 
-    <div class="relative w-7 h-28 rounded-xl bg-[#121212]/95 border-2 border-[#e2b245]/80 shadow-[0_6px_18px_rgba(0,0,0,0.85)] p-0.5 flex items-end overflow-hidden">
+    <div class="relative w-7 h-28 rounded-xl bg-[#121212] border-2 border-[#e2b245]/80 shadow-[0_6px_18px_rgba(0,0,0,0.85)] p-0.5 flex items-end overflow-hidden">
       <div id="barra-bateria-chegada" class="hidden absolute left-0.5 right-0.5 bottom-0.5 rounded-b-lg border-t-2 border-dashed border-emerald-300/80 pointer-events-none transition-all duration-300" style="height: 0%;"></div>
       <div id="barra-bateria-vertical" class="w-full rounded-b-lg bg-[#e2b245] transition-all duration-300" style="height: 100%;"></div>
     </div>
 
-    <span id="texto-bateria-vertical" class="text-[10px] font-black text-white bg-[#0a0a0a]/90 px-1.5 py-0.5 rounded border border-zinc-700 leading-none">
+    <span id="texto-bateria-vertical" class="text-[10px] font-black text-white bg-[#0a0a0a] px-1.5 py-0.5 rounded border border-zinc-700 leading-none">
       100%
     </span>
     <span id="subtexto-bateria-vertical" class="text-[8px] font-bold text-[#e2b245] leading-none">
@@ -113,7 +113,7 @@
   <!-- CONTROLES FLUTUANTES SUPERIORES DIREITOS -->
   <div class="fixed top-24 right-4 z-20 flex flex-col items-end gap-2.5">
     <!-- Botão discreto para abrir/recolher menu de configurações -->
-    <button id="btn-menu-config" onclick="toggleMenuConfig()" title="Configurações" class="w-10 h-10 rounded-full bg-[#121212]/80 hover:bg-[#121212] border border-zinc-700/90 hover:border-[#e2b245] shadow-[0_4px_14px_rgba(0,0,0,0.75)] flex items-center justify-center text-zinc-300 hover:text-[#e2b245] transition-all active:scale-95">
+    <button id="btn-menu-config" onclick="toggleMenuConfig()" title="Configurações" class="w-10 h-10 rounded-full bg-[#121212] hover:bg-[#181818] border border-zinc-700/90 hover:border-[#e2b245] shadow-[0_4px_14px_rgba(0,0,0,0.75)] flex items-center justify-center text-zinc-300 hover:text-[#e2b245] transition-all active:scale-95">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -122,7 +122,7 @@
 
     <!-- Bússola -->
     <div class="flex flex-col items-center">
-      <button id="btn-bussola" onclick="alternarModoBussola()" title="Orientar mapa pela direção" class="w-12 h-12 rounded-full bg-[#121212]/95 border-2 border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center transition-all active:scale-95">
+      <button id="btn-bussola" onclick="alternarModoBussola()" title="Orientar mapa pela direção" class="w-12 h-12 rounded-full bg-[#121212] border-2 border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center transition-all active:scale-95">
         <svg id="agulha-bussola" class="w-7 h-7 transition-transform duration-300" viewBox="0 0 32 32" fill="none">
           <circle cx="16" cy="16" r="14" stroke="#3f3f46" stroke-width="1.2"/>
           <polygon points="16,4 20,16 12,16" fill="#ef4444"/>
@@ -130,7 +130,7 @@
           <circle cx="16" cy="16" r="2.2" fill="#0a0a0a" stroke="#ffffff" stroke-width="1"/>
         </svg>
       </button>
-      <span id="label-bussola" class="mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-[#e2b245] border border-[#e2b245]/30 shadow">
+      <span id="label-bussola" class="mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a] text-[#e2b245] border border-[#e2b245]/30 shadow">
         Bússola ON
       </span>
     </div>
@@ -138,7 +138,7 @@
 
   <!-- MENU DE CONFIGURAÇÕES RECOLHÍVEL -->
   <div id="painel-config" class="hidden fixed top-20 right-4 left-4 z-30">
-    <div class="max-w-md mx-auto bg-[#121212]/98 backdrop-blur-md p-4 rounded-2xl border border-[#e2b245]/40 shadow-2xl space-y-3.5 max-h-[75vh] overflow-y-auto">
+    <div class="max-w-md mx-auto bg-[#121212] p-4 rounded-2xl border border-[#e2b245]/40 shadow-2xl space-y-3.5 max-h-[75vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5">
         <div>
           <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#e2b245]">Preferências do App</span>
@@ -167,9 +167,9 @@
           <option value="">Padrão do sistema (pt-BR)</option>
         </select>
 
-        <!-- Estilo de fala / tom (ajuste local do TTS do aparelho) -->
+        <!-- Estilo de fala / tom -->
         <div class="flex items-center justify-between gap-2 pt-1">
-          <label for="select-estilo-fala" class="text-[11px] font-semibold text-zinc-400">Tom e ritmo da fala:</label>
+          <label for="select-estilo-fala" class="text-[11px] font-semibold text-zinc-400 whitespace-nowrap">Tom e ritmo da fala:</label>
           <select id="select-estilo-fala" onchange="definirEstiloFala(this.value)" class="bg-[#1a1a1a] text-[11px] font-bold text-zinc-200 px-2.5 py-1.5 rounded-lg border border-zinc-700 focus:outline-none focus:border-[#e2b245]">
             <option value="padrao">Natural (Padrão)</option>
             <option value="grave">Tom mais grave</option>
@@ -219,7 +219,7 @@
 
   <!-- MODAL DE BUSCA + CONFIGURAÇÃO DE BATERIA / PILOTAGEM -->
   <div id="modal-busca" class="hidden fixed inset-x-0 top-20 z-30 px-4">
-    <div class="max-w-md mx-auto bg-[#121212]/98 backdrop-blur-md p-4 rounded-2xl border border-[#e2b245]/40 shadow-2xl space-y-3">
+    <div class="max-w-md mx-auto bg-[#121212] p-4 rounded-2xl border border-[#e2b245]/40 shadow-2xl space-y-3">
       <div class="flex items-center justify-between">
         <span class="text-xs font-bold uppercase tracking-wider text-[#e2b245]">Destino & Autonomia</span>
         <button onclick="toggleBusca()" class="text-zinc-400 hover:text-white text-xs font-bold px-2 py-1">Fechar ✕</button>
@@ -240,20 +240,25 @@
         </button>
       </div>
 
-      <div class="pt-2.5 border-t border-zinc-800 flex items-center justify-between gap-2">
-        <span class="text-[11px] text-zinc-400 font-semibold">Modo de pilotagem:</span>
-        <div class="flex gap-1.5">
-          <button id="btn-modo-eco" onclick="definirModoPilotagem('eco')" class="px-3 py-1 rounded-lg text-xs font-extrabold bg-[#e2b245] text-black">
-            Eco (18 km/h) ⚡
+      <!-- MODO DE PILOTAGEM AJUSTADO -->
+      <div class="pt-2.5 border-t border-zinc-800 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] text-zinc-400 font-semibold whitespace-nowrap">Modo de pilotagem:</span>
+          <span class="text-[10px] font-bold text-[#e2b245]">Velocidade média</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btn-modo-eco" onclick="definirModoPilotagem('eco')" class="py-2 px-2.5 rounded-xl text-xs font-extrabold bg-[#e2b245] text-black flex items-center justify-center gap-1 whitespace-nowrap transition">
+            <span>Eco (18 km/h)</span>
+            <span>⚡</span>
           </button>
-          <button id="btn-modo-normal" onclick="definirModoPilotagem('normal')" class="px-3 py-1 rounded-lg text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700">
-            Normal (26 km/h)
+          <button id="btn-modo-normal" onclick="definirModoPilotagem('normal')" class="py-2 px-2.5 rounded-xl text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700 flex items-center justify-center gap-1 whitespace-nowrap transition">
+            <span>Normal (26 km/h)</span>
           </button>
         </div>
       </div>
 
       <div class="pt-2.5 border-t border-zinc-800 flex items-center justify-between gap-2">
-        <span class="text-[11px] text-zinc-400 font-semibold">Voltagem da bateria:</span>
+        <span class="text-[11px] text-zinc-400 font-semibold whitespace-nowrap">Voltagem da bateria:</span>
         <div class="flex items-center gap-1.5">
           <div class="flex items-center bg-[#1a1a1a] border border-zinc-700 focus-within:border-[#e2b245] rounded-lg px-2.5 py-1">
             <input 
@@ -296,7 +301,7 @@
 
   <!-- RESUMO COMPLETO DA ROTA + ESTIMATIVA DE GASTO -->
   <div id="painel-etapas" class="hidden fixed bottom-16 left-0 right-0 z-30 px-3 pb-2">
-    <div class="max-w-md mx-auto bg-[#121212]/98 backdrop-blur-md rounded-2xl border border-[#e2b245]/40 shadow-[0_-10px_30px_rgba(0,0,0,0.9)] overflow-hidden">
+    <div class="max-w-md mx-auto bg-[#121212] rounded-2xl border border-[#e2b245]/40 shadow-[0_-10px_30px_rgba(0,0,0,0.9)] overflow-hidden">
       <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-[#0d0d0d]">
         <div>
           <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#e2b245]">Resumo do Trajeto</span>
@@ -325,7 +330,7 @@
   </div>
 
   <!-- BANNER PROMOCIONAL COMPACTO E FECHÁVEL -->
-  <div id="ad-gotrix" class="hidden fixed bottom-40 left-4 right-4 z-20 max-w-md mx-auto bg-[#121212]/95 backdrop-blur-md p-3 rounded-2xl border border-[#e2b245]/40 shadow-2xl transition-all duration-300">
+  <div id="ad-gotrix" class="hidden fixed bottom-40 left-4 right-4 z-20 max-w-md mx-auto bg-[#121212] p-3 rounded-2xl border border-[#e2b245]/40 shadow-2xl transition-all duration-300">
     <button onclick="fecharAnuncio()" title="Fechar" class="absolute -top-2.5 -right-2.5 bg-[#1a1a1a] text-zinc-300 hover:text-[#e2b245] p-1.5 rounded-full border border-zinc-700 shadow">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
     </button>
@@ -356,7 +361,7 @@
           <span id="limite-via" class="text-black font-black text-xs leading-none">32</span>
         </div>
 
-        <div class="w-20 h-20 rounded-full bg-[#141414]/95 border-2 border-zinc-700 shadow-[0_6px_20px_rgba(0,0,0,0.85)] flex flex-col items-center justify-center relative">
+        <div class="w-20 h-20 rounded-full bg-[#141414] border-2 border-zinc-700 shadow-[0_6px_20px_rgba(0,0,0,0.85)] flex flex-col items-center justify-center relative">
           <svg class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 80 80">
             <circle cx="40" cy="40" r="34" stroke="#27272a" stroke-width="5" fill="none" />
             <circle id="arco-velocidade" cx="40" cy="40" r="34" stroke="#e2b245" stroke-width="5" fill="none" stroke-dasharray="213" stroke-dashoffset="213" stroke-linecap="round" />
@@ -380,7 +385,7 @@
             <circle cx="12" cy="12" r="8" stroke-opacity="0.4"/>
           </svg>
         </button>
-        <span id="badge-recentralizar" class="hidden mt-1 text-[9px] font-black uppercase bg-black/90 text-[#e2b245] px-2 py-0.5 rounded-full border border-[#e2b245]/50 shadow">
+        <span id="badge-recentralizar" class="hidden mt-1 text-[9px] font-black uppercase bg-black text-[#e2b245] px-2 py-0.5 rounded-full border border-[#e2b245]/50 shadow">
           Recentralizar
         </span>
       </div>
@@ -984,11 +989,11 @@
       const btnNormal = document.getElementById('btn-modo-normal');
 
       if (modo === 'eco') {
-        btnEco.className = "px-3 py-1 rounded-lg text-xs font-extrabold bg-[#e2b245] text-black";
-        btnNormal.className = "px-3 py-1 rounded-lg text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700";
+        btnEco.className = "py-2 px-2.5 rounded-xl text-xs font-extrabold bg-[#e2b245] text-black flex items-center justify-center gap-1 whitespace-nowrap transition";
+        btnNormal.className = "py-2 px-2.5 rounded-xl text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700 flex items-center justify-center gap-1 whitespace-nowrap transition";
       } else {
-        btnNormal.className = "px-3 py-1 rounded-lg text-xs font-extrabold bg-[#e2b245] text-black";
-        btnEco.className = "px-3 py-1 rounded-lg text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700";
+        btnNormal.className = "py-2 px-2.5 rounded-xl text-xs font-extrabold bg-[#e2b245] text-black flex items-center justify-center gap-1 whitespace-nowrap transition";
+        btnEco.className = "py-2 px-2.5 rounded-xl text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700 flex items-center justify-center gap-1 whitespace-nowrap transition";
       }
 
       if (ultimaRotaDados) {
@@ -1053,12 +1058,12 @@
         btn.classList.add('border-[#e2b245]');
         btn.classList.remove('border-zinc-600');
         label.innerText = 'Bússola ON';
-        label.className = 'mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-[#e2b245] border border-[#e2b245]/30 shadow';
+        label.className = 'mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a] text-[#e2b245] border border-[#e2b245]/30 shadow';
       } else {
         btn.classList.remove('border-[#e2b245]');
         btn.classList.add('border-zinc-600');
         label.innerText = 'Norte Fixo';
-        label.className = 'mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-zinc-400 border border-zinc-700 shadow';
+        label.className = 'mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a] text-zinc-400 border border-zinc-700 shadow';
       }
 
       aplicarOrientacaoMapa(anguloAtual);
