@@ -93,8 +93,34 @@
     </div>
   </header>
 
+  <!-- INDICADOR VERTICAL DE BATERIA (LATERAL ESQUERDA) -->
+  <div onclick="toggleBusca()" title="Ajustar carga atual e voltagem da bateria" class="fixed top-24 left-4 z-20 flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition">
+    <div class="w-4 h-1.5 rounded-t bg-zinc-400"></div>
+
+    <div class="relative w-7 h-28 rounded-xl bg-[#121212]/95 border-2 border-[#e2b245]/80 shadow-[0_6px_18px_rgba(0,0,0,0.85)] p-0.5 flex items-end overflow-hidden">
+      <div id="barra-bateria-chegada" class="hidden absolute left-0.5 right-0.5 bottom-0.5 rounded-b-lg border-t-2 border-dashed border-emerald-300/80 pointer-events-none transition-all duration-300" style="height: 0%;"></div>
+      <div id="barra-bateria-vertical" class="w-full rounded-b-lg bg-[#e2b245] transition-all duration-300" style="height: 100%;"></div>
+    </div>
+
+    <span id="texto-bateria-vertical" class="text-[10px] font-black text-white bg-[#0a0a0a]/90 px-1.5 py-0.5 rounded border border-zinc-700 leading-none">
+      100%
+    </span>
+    <span id="subtexto-bateria-vertical" class="text-[8px] font-bold text-[#e2b245] leading-none">
+      48V
+    </span>
+  </div>
+
   <!-- CONTROLES FLUTUANTES SUPERIORES DIREITOS -->
   <div class="fixed top-24 right-4 z-20 flex flex-col items-end gap-2.5">
+    <!-- Botão discreto para abrir/recolher menu de configurações -->
+    <button id="btn-menu-config" onclick="toggleMenuConfig()" title="Configurações" class="w-10 h-10 rounded-full bg-[#121212]/80 hover:bg-[#121212] border border-zinc-700/90 hover:border-[#e2b245] shadow-[0_4px_14px_rgba(0,0,0,0.75)] flex items-center justify-center text-zinc-300 hover:text-[#e2b245] transition-all active:scale-95">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    </button>
+
+    <!-- Bússola -->
     <div class="flex flex-col items-center">
       <button id="btn-bussola" onclick="alternarModoBussola()" title="Orientar mapa pela direção" class="w-12 h-12 rounded-full bg-[#121212]/95 border-2 border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center transition-all active:scale-95">
         <svg id="agulha-bussola" class="w-7 h-7 transition-transform duration-300" viewBox="0 0 32 32" fill="none">
@@ -108,22 +134,68 @@
         Bússola ON
       </span>
     </div>
+  </div>
 
-    <button id="btn-voz" onclick="alternarVoz()" title="Ativar ou desativar instruções por voz" class="w-11 h-11 rounded-full bg-[#e2b245]/20 border-2 border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center text-[#e2b245] transition-all active:scale-95">
-      <svg id="icone-voz" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-      </svg>
-    </button>
+  <!-- MENU DE CONFIGURAÇÕES RECOLHÍVEL -->
+  <div id="painel-config" class="hidden fixed top-20 right-4 left-4 z-30">
+    <div class="max-w-md mx-auto bg-[#121212]/98 backdrop-blur-md p-4 rounded-2xl border border-[#e2b245]/40 shadow-2xl space-y-3.5">
+      <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+        <div>
+          <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#e2b245]">Preferências do App</span>
+          <h3 class="text-sm font-black text-white">Configurações</h3>
+        </div>
+        <button onclick="fecharMenuConfig()" class="text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-700 px-2.5 py-1 rounded-lg">
+          Recolher ⌃
+        </button>
+      </div>
 
-    <button id="btn-sol-noite" onclick="alternarTemaMapa()" title="Alternar entre Modo Noite e Modo Sol" class="w-11 h-11 rounded-full bg-[#121212]/95 border border-zinc-700 hover:border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center text-[#e2b245] transition-all active:scale-95">
-      <svg id="icone-sol-noite" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-    </button>
+      <!-- Escolha da voz do app -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <label for="select-voz-app" class="text-xs font-bold text-zinc-200">Voz da navegação</label>
+          <button onclick="testarVozSelecionada()" class="text-[10px] font-extrabold uppercase bg-[#e2b245]/15 hover:bg-[#e2b245]/25 text-[#e2b245] border border-[#e2b245]/40 px-2.5 py-1 rounded-lg transition">
+            Testar voz 🔊
+          </button>
+        </div>
 
-    <button id="btn-wakelock" onclick="alternarWakeLock()" title="Manter tela sempre acesa na pilotagem" class="px-2.5 py-1 rounded-full bg-[#121212]/95 border border-zinc-700 text-[9px] font-extrabold uppercase tracking-wider text-zinc-300 shadow active:scale-95">
-      Tela: Auto
-    </button>
+        <select id="select-voz-app" onchange="definirVozSelecionada(this.value)" class="w-full bg-[#1a1a1a] text-xs font-semibold text-white px-3 py-2.5 rounded-xl border border-zinc-700 focus:outline-none focus:border-[#e2b245]">
+          <option value="">Voz padrão do sistema (pt-BR)</option>
+        </select>
+      </div>
+
+      <!-- Liga/desliga voz, tela e tema -->
+      <div class="pt-2 border-t border-zinc-800 space-y-2">
+        <div class="flex items-center justify-between py-1">
+          <div>
+            <p class="text-xs font-bold text-white">Instruções por voz</p>
+            <p class="text-[10px] text-zinc-400">Falar conversões e alertas na rota</p>
+          </div>
+          <button id="btn-voz" onclick="alternarVoz()" class="px-3 py-1.5 rounded-xl bg-[#e2b245]/15 border border-[#e2b245]/50 text-xs font-extrabold text-[#e2b245] active:scale-95 transition">
+            <span id="texto-status-voz">Ligada</span>
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between py-1 border-t border-zinc-800/70">
+          <div>
+            <p class="text-xs font-bold text-white">Manter tela acesa</p>
+            <p class="text-[10px] text-zinc-400">Evita apagar a tela durante a pilotagem</p>
+          </div>
+          <button id="btn-wakelock" onclick="alternarWakeLock()" class="px-3 py-1.5 rounded-xl bg-[#1a1a1a] border border-zinc-700 text-xs font-bold text-zinc-300 active:scale-95 transition">
+            <span id="texto-status-tela">Auto</span>
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between py-1 border-t border-zinc-800/70">
+          <div>
+            <p class="text-xs font-bold text-white">Aparência do mapa</p>
+            <p class="text-[10px] text-zinc-400">Alternar entre modo noturno e diurno</p>
+          </div>
+          <button id="btn-sol-noite" onclick="alternarTemaMapa()" class="px-3 py-1.5 rounded-xl bg-[#1a1a1a] border border-zinc-700 hover:border-[#e2b245] text-xs font-bold text-[#e2b245] active:scale-95 transition">
+            <span id="texto-status-tema">Modo Noite</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL DE BUSCA + CONFIGURAÇÃO DE BATERIA / PILOTAGEM -->
@@ -149,7 +221,6 @@
         </button>
       </div>
 
-      <!-- Perfil de pilotagem -->
       <div class="pt-2.5 border-t border-zinc-800 flex items-center justify-between gap-2">
         <span class="text-[11px] text-zinc-400 font-semibold">Modo de pilotagem:</span>
         <div class="flex gap-1.5">
@@ -162,20 +233,29 @@
         </div>
       </div>
 
-      <!-- Sistema da Bateria (36V vs 48V) -->
       <div class="pt-2.5 border-t border-zinc-800 flex items-center justify-between gap-2">
-        <span class="text-[11px] text-zinc-400 font-semibold">Sistema / Pack:</span>
-        <div class="flex gap-1.5">
-          <button id="btn-pack-36v" onclick="definirPackBateria('36v')" class="px-3 py-1 rounded-lg text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700">
-            36V
-          </button>
-          <button id="btn-pack-48v" onclick="definirPackBateria('48v')" class="px-3 py-1 rounded-lg text-xs font-extrabold bg-[#e2b245] text-black">
-            48V
-          </button>
+        <span class="text-[11px] text-zinc-400 font-semibold">Voltagem da bateria:</span>
+        <div class="flex items-center gap-1.5">
+          <div class="flex items-center bg-[#1a1a1a] border border-zinc-700 focus-within:border-[#e2b245] rounded-lg px-2.5 py-1">
+            <input 
+              type="number" 
+              id="input-voltagem" 
+              min="12" 
+              max="120" 
+              step="1" 
+              value="48" 
+              oninput="atualizarVoltagemDigitada(this.value)"
+              class="w-12 bg-transparent text-right text-xs font-black text-white focus:outline-none"
+            />
+            <span class="text-xs font-black text-[#e2b245] ml-0.5 select-none">V</span>
+          </div>
+          <button onclick="setarVoltagemRapida(36)" class="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-bold text-zinc-300 border border-zinc-700">36V</button>
+          <button onclick="setarVoltagemRapida(48)" class="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-bold text-zinc-300 border border-zinc-700">48V</button>
+          <button onclick="setarVoltagemRapida(60)" class="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-bold text-zinc-300 border border-zinc-700">60V</button>
+          <button onclick="setarVoltagemRapida(72)" class="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-bold text-zinc-300 border border-zinc-700">72V</button>
         </div>
       </div>
 
-      <!-- Carga atual da bateria (%) -->
       <div class="pt-2.5 border-t border-zinc-800">
         <div class="flex items-center justify-between text-[11px] mb-1.5">
           <span class="text-zinc-400 font-semibold">Carga atual da bateria:</span>
@@ -208,7 +288,6 @@
         </button>
       </div>
 
-      <!-- Barra de Gasto e Restante de Bateria -->
       <div id="resumo-bateria-box" class="px-4 py-2.5 bg-[#161616] border-b border-zinc-800/90 flex items-center justify-between text-xs">
         <div>
           <span class="text-zinc-400">Gasto na rota:</span>
@@ -337,12 +416,19 @@
     let mapaEscuroAtivo = true;
     let modoBussolaAtivo = true;
     let seguirUsuario = true;
-    let modoPilotagem = 'eco'; // 'eco' ou 'normal'
-    let packBateria = '48v';   // '36v' ou '48v'
-    let cargaAtualPct = 100;   // 10% a 100%
+    let modoPilotagem = 'eco';
+    let voltagemBateria = 48;
+    let cargaAtualPct = 100;
+
+    let manterTelaAtiva = false;
     let wakeLockSentinel = null;
 
+    let fusoHorarioAtual = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo';
+    let ultimaCoordFuso = null;
+
     let vozAtiva = true;
+    let nomeVozSelecionada = '';
+    let vozesDisponiveis = [];
     let ultimaFalaTexto = '';
     let ultimoTempoFala = 0;
     let avisoProximidadeFalado = false;
@@ -354,19 +440,178 @@
       maxZoom: 20
     }).addTo(map);
 
-    function definirPackBateria(pack) {
-      packBateria = pack;
-      const btn36 = document.getElementById('btn-pack-36v');
-      const btn48 = document.getElementById('btn-pack-48v');
+    function salvarPreferencias() {
+      try {
+        localStorage.setItem('gotrix_prefs', JSON.stringify({
+          vozAtiva,
+          nomeVozSelecionada,
+          manterTelaAtiva,
+          mapaEscuroAtivo
+        }));
+      } catch (e) {}
+    }
 
-      if (pack === '36v') {
-        btn36.className = "px-3 py-1 rounded-lg text-xs font-extrabold bg-[#e2b245] text-black";
-        btn48.className = "px-3 py-1 rounded-lg text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700";
+    function carregarPreferencias() {
+      try {
+        const raw = localStorage.getItem('gotrix_prefs');
+        if (!raw) return;
+        const prefs = JSON.parse(raw);
+        if (typeof prefs.vozAtiva === 'boolean') vozAtiva = prefs.vozAtiva;
+        if (typeof prefs.nomeVozSelecionada === 'string') nomeVozSelecionada = prefs.nomeVozSelecionada;
+        if (typeof prefs.manterTelaAtiva === 'boolean') manterTelaAtiva = prefs.manterTelaAtiva;
+        if (typeof prefs.mapaEscuroAtivo === 'boolean') mapaEscuroAtivo = prefs.mapaEscuroAtivo;
+      } catch (e) {}
+    }
+
+    function toggleMenuConfig() {
+      fecharResumoRota();
+      document.getElementById('modal-busca').classList.add('hidden');
+      const painel = document.getElementById('painel-config');
+      painel.classList.toggle('hidden');
+      if (!painel.classList.contains('hidden')) {
+        carregarListaVozes();
+        atualizarVisualBotaoVoz();
+        atualizarVisualBotaoTela();
+        atualizarVisualTemaMapa();
+      }
+    }
+
+    function fecharMenuConfig() {
+      document.getElementById('painel-config').classList.add('hidden');
+    }
+
+    function carregarListaVozes() {
+      if (!('speechSynthesis' in window)) return;
+      vozesDisponiveis = window.speechSynthesis.getVoices() || [];
+      const select = document.getElementById('select-voz-app');
+      if (!select) return;
+
+      const ordenadas = [...vozesDisponiveis].sort((a, b) => {
+        const aPt = (a.lang || '').toLowerCase().includes('pt') ? 0 : 1;
+        const bPt = (b.lang || '').toLowerCase().includes('pt') ? 0 : 1;
+        return aPt - bPt || a.name.localeCompare(b.name);
+      });
+
+      select.innerHTML = `<option value="">Voz padrão do sistema (pt-BR)</option>` +
+        ordenadas.map(v => {
+          const selected = v.name === nomeVozSelecionada ? 'selected' : '';
+          return `<option value="${v.name.replace(/"/g, '&quot;')}" ${selected}>${v.name} (${v.lang})</option>`;
+        }).join('');
+    }
+
+    function definirVozSelecionada(nome) {
+      nomeVozSelecionada = nome;
+      salvarPreferencias();
+    }
+
+    function testarVozSelecionada() {
+      vozAtiva = true;
+      atualizarVisualBotaoVoz();
+      salvarPreferencias();
+      falarInstrucao("Voz do GoTrix GPS configurada com sucesso.", true);
+    }
+
+    function obterVozEscolhida() {
+      if (!vozesDisponiveis.length && 'speechSynthesis' in window) {
+        vozesDisponiveis = window.speechSynthesis.getVoices() || [];
+      }
+      if (nomeVozSelecionada) {
+        const exata = vozesDisponiveis.find(v => v.name === nomeVozSelecionada);
+        if (exata) return exata;
+      }
+      return vozesDisponiveis.find(v => v.lang && v.lang.toLowerCase().includes('pt-br')) ||
+             vozesDisponiveis.find(v => v.lang && v.lang.toLowerCase().includes('pt')) ||
+             null;
+    }
+
+    function formatarHoraNoFuso(dataObj, timeZone) {
+      try {
+        return dataObj.toLocaleTimeString('pt-BR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: timeZone || undefined
+        });
+      } catch (e) {
+        return dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+
+    async function atualizarFusoPorLocalizacao(lat, lng) {
+      if (ultimaCoordFuso) {
+        const delta = Math.abs(lat - ultimaCoordFuso[0]) + Math.abs(lng - ultimaCoordFuso[1]);
+        if (delta < 0.08) return;
+      }
+      ultimaCoordFuso = [lat, lng];
+
+      try {
+        const url = `https://timeapi.io/api/timezone/coordinate?latitude=${lat}&longitude=${lng}`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.timeZone) {
+          fusoHorarioAtual = data.timeZone;
+          atualizarRelogioRodape();
+          if (ultimaRotaDados) {
+            atualizarMetricasRota(ultimaRotaDados.distance);
+          }
+        }
+      } catch (e) {}
+    }
+
+    function atualizarRelogioRodape() {
+      const horaEl = document.getElementById('hora-chegada');
+      if (!ultimaRotaDados) {
+        horaEl.innerText = formatarHoraNoFuso(new Date(), fusoHorarioAtual);
+      }
+    }
+
+    function atualizarIndicadorBateriaVertical(sobraPrevistaPct = null) {
+      const barraAtual = document.getElementById('barra-bateria-vertical');
+      const barraChegada = document.getElementById('barra-bateria-chegada');
+      const textoPct = document.getElementById('texto-bateria-vertical');
+      const subtextoV = document.getElementById('subtexto-bateria-vertical');
+
+      const pctClamped = Math.max(0, Math.min(100, cargaAtualPct));
+      barraAtual.style.height = `${pctClamped}%`;
+      textoPct.innerText = `${pctClamped}%`;
+      subtextoV.innerText = `${voltagemBateria}V`;
+
+      if (pctClamped <= 20) {
+        barraAtual.className = "w-full rounded-b-lg bg-red-500 transition-all duration-300";
+      } else if (pctClamped <= 45) {
+        barraAtual.className = "w-full rounded-b-lg bg-yellow-400 transition-all duration-300";
       } else {
-        btn48.className = "px-3 py-1 rounded-lg text-xs font-extrabold bg-[#e2b245] text-black";
-        btn36.className = "px-3 py-1 rounded-lg text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700";
+        barraAtual.className = "w-full rounded-b-lg bg-[#e2b245] transition-all duration-300";
       }
 
+      if (sobraPrevistaPct !== null && !isNaN(sobraPrevistaPct)) {
+        const sobraClamped = Math.max(0, Math.min(100, sobraPrevistaPct));
+        barraChegada.classList.remove('hidden');
+        barraChegada.style.height = `${sobraClamped}%`;
+      } else {
+        barraChegada.classList.add('hidden');
+        barraChegada.style.height = '0%';
+      }
+    }
+
+    function atualizarVoltagemDigitada(valor) {
+      const parsed = parseFloat(valor);
+      if (isNaN(parsed) || parsed <= 0) {
+        voltagemBateria = 48;
+      } else {
+        voltagemBateria = Math.min(120, Math.max(12, parsed));
+      }
+
+      atualizarIndicadorBateriaVertical();
+      if (ultimaRotaDados) {
+        atualizarMetricasRota(ultimaRotaDados.distance);
+      }
+    }
+
+    function setarVoltagemRapida(volts) {
+      voltagemBateria = volts;
+      document.getElementById('input-voltagem').value = volts;
+      atualizarIndicadorBateriaVertical();
       if (ultimaRotaDados) {
         atualizarMetricasRota(ultimaRotaDados.distance);
       }
@@ -375,21 +620,19 @@
     function atualizarCargaAtual(valor) {
       cargaAtualPct = parseInt(valor, 10) || 100;
       document.getElementById('label-carga-atual').innerText = `${cargaAtualPct}%`;
+      atualizarIndicadorBateriaVertical();
       if (ultimaRotaDados) {
         atualizarMetricasRota(ultimaRotaDados.distance);
       }
     }
 
-    // Cálculo de gasto (% da bateria) baseado em distância, voltagem, modo e relevo/extensão
     function calcularEstimativaBateria(distanciaKm) {
-      // Percentual estimado por km
-      const taxaBasePorKm = packBateria === '48v'
-        ? (modoPilotagem === 'eco' ? 2.1 : 3.0)
-        : (modoPilotagem === 'eco' ? 2.8 : 4.0);
+      const base48vPorKm = modoPilotagem === 'eco' ? 2.1 : 3.0;
+      const escalaVoltagem = Math.min(1.6, Math.max(0.55, 48 / voltagemBateria));
+      const taxaPorKm = base48vPorKm * escalaVoltagem;
 
-      // Ajuste de esforço por distância/relevo
       const fatorEsforco = distanciaKm > 4 ? 1.15 : 1.0;
-      const gastoPct = Math.min(100, Math.max(1, Math.round(distanciaKm * taxaBasePorKm * fatorEsforco)));
+      const gastoPct = Math.min(100, Math.max(1, Math.round(distanciaKm * taxaPorKm * fatorEsforco)));
       const sobraPct = cargaAtualPct - gastoPct;
 
       return { gastoPct, sobraPct };
@@ -414,25 +657,36 @@
         utterance.rate = 1.05;
         utterance.pitch = 1.0;
 
-        const vozes = window.speechSynthesis.getVoices();
-        const vozPt = vozes.find(v => v.lang && v.lang.toLowerCase().includes('pt-br')) ||
-                      vozes.find(v => v.lang && v.lang.toLowerCase().includes('pt'));
-        if (vozPt) utterance.voice = vozPt;
+        const vozEscolhida = obterVozEscolhida();
+        if (vozEscolhida) utterance.voice = vozEscolhida;
 
         window.speechSynthesis.speak(utterance);
       } catch (e) {}
     }
 
-    function alternarVoz() {
-      vozAtiva = !vozAtiva;
+    function atualizarVisualBotaoVoz() {
       const btn = document.getElementById('btn-voz');
+      const txt = document.getElementById('texto-status-voz');
+      if (!btn || !txt) return;
 
       if (vozAtiva) {
-        btn.className = "w-11 h-11 rounded-full bg-[#e2b245]/20 border-2 border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center text-[#e2b245] transition-all active:scale-95";
-        falarInstrucao("Voz de navegação ativada", true);
+        btn.className = "px-3 py-1.5 rounded-xl bg-[#e2b245]/15 border border-[#e2b245]/50 text-xs font-extrabold text-[#e2b245] active:scale-95 transition";
+        txt.innerText = "Ligada";
       } else {
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-        btn.className = "w-11 h-11 rounded-full bg-[#121212]/95 border border-zinc-700 shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center text-zinc-500 transition-all active:scale-95";
+        btn.className = "px-3 py-1.5 rounded-xl bg-[#1a1a1a] border border-zinc-700 text-xs font-bold text-zinc-500 active:scale-95 transition";
+        txt.innerText = "Desligada";
+      }
+    }
+
+    function alternarVoz() {
+      vozAtiva = !vozAtiva;
+      atualizarVisualBotaoVoz();
+      salvarPreferencias();
+
+      if (vozAtiva) {
+        falarInstrucao("Voz de navegação ativada", true);
+      } else if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
       }
     }
 
@@ -467,6 +721,7 @@
     }
 
     function toggleResumoRota() {
+      fecharMenuConfig();
       const painel = document.getElementById('painel-etapas');
       painel.classList.toggle('hidden');
       if (!painel.classList.contains('hidden')) {
@@ -533,7 +788,7 @@
       const totalKm = (ultimaRotaDados.distance / 1000).toFixed(1);
       const { gastoPct, sobraPct } = calcularEstimativaBateria(parseFloat(totalKm));
 
-      titulo.innerText = `${steps.length} etapas • ${totalKm} km (${packBateria.toUpperCase()})`;
+      titulo.innerText = `${steps.length} etapas • ${totalKm} km (${voltagemBateria}V)`;
       document.getElementById('detalhe-gasto-rota').innerText = `-${gastoPct}%`;
 
       const sobraEl = document.getElementById('detalhe-sobra-rota');
@@ -571,33 +826,55 @@
       }).join('');
     }
 
-    async function ativarWakeLock() {
-      if ('wakeLock' in navigator) {
-        try {
-          wakeLockSentinel = await navigator.wakeLock.request('screen');
-          const btn = document.getElementById('btn-wakelock');
-          btn.innerText = 'Tela: Ligada';
-          btn.className = 'px-2.5 py-1 rounded-full bg-[#e2b245]/20 border border-[#e2b245]/50 text-[9px] font-extrabold uppercase tracking-wider text-[#e2b245] shadow';
-          wakeLockSentinel.addEventListener('release', () => {
-            btn.innerText = 'Tela: Auto';
-            btn.className = 'px-2.5 py-1 rounded-full bg-[#121212]/95 border border-zinc-700 text-[9px] font-extrabold uppercase tracking-wider text-zinc-300 shadow';
-          });
-        } catch (e) {}
+    function atualizarVisualBotaoTela() {
+      const btn = document.getElementById('btn-wakelock');
+      const txt = document.getElementById('texto-status-tela');
+      if (!btn || !txt) return;
+
+      if (manterTelaAtiva) {
+        btn.className = "px-3 py-1.5 rounded-xl bg-[#e2b245]/15 border border-[#e2b245]/50 text-xs font-extrabold text-[#e2b245] active:scale-95 transition";
+        txt.innerText = "Ligada";
+      } else {
+        btn.className = "px-3 py-1.5 rounded-xl bg-[#1a1a1a] border border-zinc-700 text-xs font-bold text-zinc-300 active:scale-95 transition";
+        txt.innerText = "Auto";
       }
     }
 
-    function alternarWakeLock() {
+    async function solicitarWakeLock() {
+      if (!manterTelaAtiva || !('wakeLock' in navigator)) return;
+      try {
+        if (!wakeLockSentinel) {
+          wakeLockSentinel = await navigator.wakeLock.request('screen');
+          wakeLockSentinel.addEventListener('release', () => {
+            wakeLockSentinel = null;
+          });
+        }
+      } catch (e) {}
+    }
+
+    async function liberarWakeLock() {
       if (wakeLockSentinel) {
-        wakeLockSentinel.release();
+        try {
+          await wakeLockSentinel.release();
+        } catch (e) {}
         wakeLockSentinel = null;
-      } else {
-        ativarWakeLock();
       }
+    }
+
+    async function alternarWakeLock() {
+      manterTelaAtiva = !manterTelaAtiva;
+      if (manterTelaAtiva) {
+        await solicitarWakeLock();
+      } else {
+        await liberarWakeLock();
+      }
+      atualizarVisualBotaoTela();
+      salvarPreferencias();
     }
 
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && !wakeLockSentinel) {
-        ativarWakeLock();
+      if (document.visibilityState === 'visible' && manterTelaAtiva && !wakeLockSentinel) {
+        solicitarWakeLock();
       }
     });
 
@@ -631,15 +908,16 @@
       ultimaRotaDados = null;
       avisoProximidadeFalado = false;
       fecharResumoRota();
+      atualizarIndicadorBateriaVertical(null);
       falarInstrucao("Rota encerrada", true);
       document.getElementById('btn-limpar-rota').classList.add('hidden');
       document.getElementById('distancia-manobra').innerText = 'Pronto';
       document.getElementById('rua-manobra').innerText = 'Toque na lupa abaixo ou no mapa';
       document.getElementById('via-atual-texto').innerText = 'Ciclovia / Via';
-      document.getElementById('hora-chegada').innerText = '--:--';
       document.getElementById('tempo-texto').innerText = '0 min';
       document.getElementById('distancia-texto').innerText = '0 km';
       document.getElementById('badge-relevo').innerText = 'Gasto --% ⚡';
+      atualizarRelogioRodape();
       recentralizarUsuario();
     }
 
@@ -725,6 +1003,7 @@
 
     function toggleBusca() {
       fecharResumoRota();
+      fecharMenuConfig();
       const modal = document.getElementById('modal-busca');
       modal.classList.toggle('hidden');
       if (!modal.classList.contains('hidden')) {
@@ -732,18 +1011,26 @@
       }
     }
 
-    function alternarTemaMapa() {
+    function atualizarVisualTemaMapa() {
       const mapDiv = document.getElementById('map');
       const btn = document.getElementById('btn-sol-noite');
+      const txt = document.getElementById('texto-status-tema');
+
       if (mapaEscuroAtivo) {
-        mapDiv.classList.remove('mapa-escuro');
-        btn.classList.add('border-[#e2b245]', 'bg-[#e2b245]/20');
-        mapaEscuroAtivo = false;
-      } else {
         mapDiv.classList.add('mapa-escuro');
-        btn.classList.remove('border-[#e2b245]', 'bg-[#e2b245]/20');
-        mapaEscuroAtivo = true;
+        if (btn) btn.className = "px-3 py-1.5 rounded-xl bg-[#1a1a1a] border border-zinc-700 hover:border-[#e2b245] text-xs font-bold text-[#e2b245] active:scale-95 transition";
+        if (txt) txt.innerText = "Modo Noite";
+      } else {
+        mapDiv.classList.remove('mapa-escuro');
+        if (btn) btn.className = "px-3 py-1.5 rounded-xl bg-[#e2b245]/15 border border-[#e2b245]/50 text-xs font-extrabold text-[#e2b245] active:scale-95 transition";
+        if (txt) txt.innerText = "Modo Dia";
       }
+    }
+
+    function alternarTemaMapa() {
+      mapaEscuroAtivo = !mapaEscuroAtivo;
+      atualizarVisualTemaMapa();
+      salvarPreferencias();
     }
 
     const iconeScooterWaze = L.divIcon({
@@ -822,6 +1109,7 @@
 
     function abrirAnuncio() {
       fecharResumoRota();
+      fecharMenuConfig();
       document.getElementById('ad-gotrix').classList.remove('hidden');
     }
 
@@ -831,15 +1119,16 @@
       const tempoMinutos = Math.max(1, Math.round((distanciaMetros / 1000) / velocidadeMedia * 60));
 
       const chegada = new Date(Date.now() + tempoMinutos * 60000);
-      const horaFormatada = chegada.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const horaFormatada = formatarHoraNoFuso(chegada, fusoHorarioAtual);
 
       document.getElementById('hora-chegada').innerText = horaFormatada;
       document.getElementById('distancia-texto').innerText = `${distanciaKm} km`;
       document.getElementById('tempo-texto').innerText = `${tempoMinutos} min`;
 
       const { gastoPct, sobraPct } = calcularEstimativaBateria(parseFloat(distanciaKm));
-      const badgeRelevo = document.getElementById('badge-relevo');
+      atualizarIndicadorBateriaVertical(sobraPct);
 
+      const badgeRelevo = document.getElementById('badge-relevo');
       if (sobraPct <= 0) {
         badgeRelevo.innerText = `Gasto ${gastoPct}% ⚠️`;
         badgeRelevo.className = "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400";
@@ -867,6 +1156,7 @@
             const primeiraVez = !marcadorUsuario;
             
             posAtual = [lat, lng];
+            atualizarFusoPorLocalizacao(lat, lng);
 
             const kmh = (speedMs !== null && !isNaN(speedMs) && speedMs >= 0) ? Math.round(speedMs * 3.6) : 0;
             atualizarVelocimetro(kmh);
@@ -983,12 +1273,25 @@
       }
     }
 
+    carregarPreferencias();
+    atualizarVisualBotaoVoz();
+    atualizarVisualBotaoTela();
+    atualizarVisualTemaMapa();
+
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.getVoices();
+      carregarListaVozes();
+      window.speechSynthesis.onvoiceschanged = carregarListaVozes;
     }
 
+    if (manterTelaAtiva) {
+      solicitarWakeLock();
+    }
+
+    atualizarIndicadorBateriaVertical(null);
+    atualizarFusoPorLocalizacao(posAtual[0], posAtual[1]);
+    atualizarRelogioRodape();
+    setInterval(atualizarRelogioRodape, 10000);
     iniciarGPS();
-    ativarWakeLock();
   </script>
 </body>
 </html>
