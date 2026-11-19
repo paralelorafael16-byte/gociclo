@@ -22,7 +22,6 @@
       background-color: #0b0b0b;
     }
 
-    /* Container ampliado para permitir rotação 360° do mapa sem mostrar bordas cortadas nos cantos */
     #map-viewport {
       position: fixed;
       inset: 0;
@@ -57,10 +56,10 @@
 
   <!-- 1. BARRA SUPERIOR DE MANOBRA -->
   <header class="fixed top-0 left-0 right-0 z-20 bg-[#0a0a0a] border-b border-[#e2b245]/30 px-4 py-3.5 shadow-[0_8px_24px_rgba(0,0,0,0.85)]">
-    <div class="max-w-md mx-auto flex items-center gap-4">
+    <div class="max-w-md mx-auto flex items-center gap-3.5">
       <!-- Ícone da Próxima Manobra -->
-      <div id="icone-manobra" class="w-12 h-12 flex items-center justify-center shrink-0 text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+      <div id="icone-manobra" class="w-11 h-11 flex items-center justify-center shrink-0 text-white">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 18V9a4 4 0 0 1 4-4h6" />
           <polyline points="15 1 19 5 15 9" />
         </svg>
@@ -68,13 +67,18 @@
 
       <!-- Distância e Nome da Rua -->
       <div class="min-w-0 flex-1">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-2">
           <p id="distancia-manobra" class="text-2xl font-black tracking-tight text-white leading-none">
             Pronto
           </p>
-          <span class="text-[10px] font-black italic tracking-wider text-[#e2b245] border border-[#e2b245]/40 px-2 py-0.5 rounded bg-[#e2b245]/10">
-            GoTrix GPS
-          </span>
+          <div class="flex items-center gap-1.5">
+            <button id="btn-limpar-rota" onclick="limparRota()" class="hidden text-[10px] font-extrabold uppercase bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/40 px-2 py-0.5 rounded transition">
+              Limpar
+            </button>
+            <span class="text-[10px] font-black italic tracking-wider text-[#e2b245] border border-[#e2b245]/40 px-2 py-0.5 rounded bg-[#e2b245]/10">
+              GoTrix GPS
+            </span>
+          </div>
         </div>
         <p id="rua-manobra" class="text-sm font-semibold text-[#e2b245] truncate mt-1">
           Toque na lupa abaixo ou no mapa
@@ -83,26 +87,41 @@
     </div>
   </header>
 
-  <!-- BOTÃO DE BÚSSOLA FLUTUANTE (Canto Superior Direito) -->
-  <div class="fixed top-24 right-4 z-20 flex flex-col items-end gap-1.5">
-    <button id="btn-bussola" onclick="alternarModoBussola()" title="Orientar mapa pela direção" class="w-12 h-12 rounded-full bg-[#121212]/95 border-2 border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center transition-all active:scale-95">
-      <svg id="agulha-bussola" class="w-7 h-7 transition-transform duration-300" viewBox="0 0 32 32" fill="none">
-        <circle cx="16" cy="16" r="14" stroke="#3f3f46" stroke-width="1.2"/>
-        <polygon points="16,4 20,16 12,16" fill="#ef4444"/>
-        <polygon points="16,28 20,16 12,16" fill="#e2b245"/>
-        <circle cx="16" cy="16" r="2.2" fill="#0a0a0a" stroke="#ffffff" stroke-width="1"/>
+  <!-- CONTROLES FLUTUANTES SUPERIORES DIREITOS (Bússola + Sol/Noite + Tela Acesa) -->
+  <div class="fixed top-24 right-4 z-20 flex flex-col items-end gap-2.5">
+    <!-- Bússola -->
+    <div class="flex flex-col items-center">
+      <button id="btn-bussola" onclick="alternarModoBussola()" title="Orientar mapa pela direção" class="w-12 h-12 rounded-full bg-[#121212]/95 border-2 border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center transition-all active:scale-95">
+        <svg id="agulha-bussola" class="w-7 h-7 transition-transform duration-300" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="14" stroke="#3f3f46" stroke-width="1.2"/>
+          <polygon points="16,4 20,16 12,16" fill="#ef4444"/>
+          <polygon points="16,28 20,16 12,16" fill="#e2b245"/>
+          <circle cx="16" cy="16" r="2.2" fill="#0a0a0a" stroke="#ffffff" stroke-width="1"/>
+        </svg>
+      </button>
+      <span id="label-bussola" class="mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-[#e2b245] border border-[#e2b245]/30 shadow">
+        Bússola ON
+      </span>
+    </div>
+
+    <!-- Alternar Modo Sol / Noite -->
+    <button id="btn-sol-noite" onclick="alternarTemaMapa()" title="Alternar entre Modo Noite e Modo Sol" class="w-11 h-11 rounded-full bg-[#121212]/95 border border-zinc-700 hover:border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center text-[#e2b245] transition-all active:scale-95">
+      <svg id="icone-sol-noite" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
       </svg>
     </button>
-    <span id="label-bussola" class="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-[#e2b245] border border-[#e2b245]/30 shadow">
-      Bússola ON
-    </span>
+
+    <!-- Manter Tela Ligada (Wake Lock) -->
+    <button id="btn-wakelock" onclick="alternarWakeLock()" title="Manter tela sempre acesa na pilotagem" class="px-2.5 py-1 rounded-full bg-[#121212]/95 border border-zinc-700 text-[9px] font-extrabold uppercase tracking-wider text-zinc-300 shadow active:scale-95">
+      Tela: Auto
+    </button>
   </div>
 
-  <!-- MODAL DE BUSCA -->
+  <!-- MODAL DE BUSCA + MODO ECO / NORMAL -->
   <div id="modal-busca" class="hidden fixed inset-x-0 top-20 z-30 px-4">
     <div class="max-w-md mx-auto bg-[#121212]/98 backdrop-blur-md p-4 rounded-2xl border border-[#e2b245]/40 shadow-2xl">
       <div class="flex items-center justify-between mb-2.5">
-        <span class="text-xs font-bold uppercase tracking-wider text-[#e2b245]">Definir Destino Eco</span>
+        <span class="text-xs font-bold uppercase tracking-wider text-[#e2b245]">Definir Destino</span>
         <button onclick="toggleBusca()" class="text-zinc-400 hover:text-white text-xs font-bold px-2 py-1">Fechar ✕</button>
       </div>
       <div class="flex gap-2">
@@ -119,17 +138,24 @@
           Ir
         </button>
       </div>
-      <div class="mt-2.5 flex items-center justify-between text-[11px] text-zinc-400">
-        <span>Modo do mapa (Ciclovias):</span>
-        <button id="btn-tema-mapa" onclick="alternarTemaMapa()" class="text-[#e2b245] font-bold underline">
-          Escuro (Alternar para Original)
-        </button>
+
+      <!-- Seletor de Perfil de Autonomia -->
+      <div class="mt-3 pt-3 border-t border-zinc-800 flex items-center justify-between gap-2">
+        <span class="text-[11px] text-zinc-400 font-semibold">Perfil de pilotagem:</span>
+        <div class="flex gap-1.5">
+          <button id="btn-modo-eco" onclick="definirModoPilotagem('eco')" class="px-3 py-1 rounded-lg text-xs font-extrabold bg-[#e2b245] text-black">
+            Eco (18 km/h) ⚡
+          </button>
+          <button id="btn-modo-normal" onclick="definirModoPilotagem('normal')" class="px-3 py-1 rounded-lg text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700">
+            Normal (26 km/h)
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- BANNER PROMOCIONAL COMPACTO E FECHÁVEL -->
-  <div id="ad-gotrix" class="fixed bottom-40 left-4 right-4 z-20 max-w-md mx-auto bg-[#121212]/95 backdrop-blur-md p-3 rounded-2xl border border-[#e2b245]/40 shadow-2xl transition-all duration-300">
+  <div id="ad-gotrix" class="hidden fixed bottom-40 left-4 right-4 z-20 max-w-md mx-auto bg-[#121212]/95 backdrop-blur-md p-3 rounded-2xl border border-[#e2b245]/40 shadow-2xl transition-all duration-300">
     <button onclick="fecharAnuncio()" title="Fechar" class="absolute -top-2.5 -right-2.5 bg-[#1a1a1a] text-zinc-300 hover:text-[#e2b245] p-1.5 rounded-full border border-zinc-700 shadow">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
     </button>
@@ -202,10 +228,10 @@
       </button>
 
       <div onclick="toggleBusca()" class="col-span-2 h-full flex flex-col items-center justify-center px-2 cursor-pointer active:bg-zinc-900 transition">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5">
           <span id="hora-chegada" class="text-lg font-black text-white leading-none">--:--</span>
           <span id="badge-relevo" class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
-            Plano ⚡
+            Eco ⚡
           </span>
         </div>
         <div class="flex items-center gap-1.5 text-xs font-bold text-zinc-400 mt-1">
@@ -235,10 +261,13 @@
     let marcadorUsuario = null;
     let marcadorDestino = null;
     let linhaRota = null;
-    let mapaEscuroAtivo = true;
+    let ultimaRotaDados = null;
 
+    let mapaEscuroAtivo = true;
     let modoBussolaAtivo = true;
     let seguirUsuario = true;
+    let modoPilotagem = 'eco'; // 'eco' (18 km/h) ou 'normal' (26 km/h)
+    let wakeLockSentinel = null;
 
     const map = L.map('map', { zoomControl: false }).setView(posAtual, 17);
     
@@ -247,7 +276,75 @@
       maxZoom: 20
     }).addTo(map);
 
-    // Pausa o seguimento automático quando o usuário arrasta o mapa manualmente
+    // Manter tela ligada (Wake Lock API)
+    async function ativarWakeLock() {
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLockSentinel = await navigator.wakeLock.request('screen');
+          const btn = document.getElementById('btn-wakelock');
+          btn.innerText = 'Tela: Ligada';
+          btn.className = 'px-2.5 py-1 rounded-full bg-[#e2b245]/20 border border-[#e2b245]/50 text-[9px] font-extrabold uppercase tracking-wider text-[#e2b245] shadow';
+          wakeLockSentinel.addEventListener('release', () => {
+            btn.innerText = 'Tela: Auto';
+            btn.className = 'px-2.5 py-1 rounded-full bg-[#121212]/95 border border-zinc-700 text-[9px] font-extrabold uppercase tracking-wider text-zinc-300 shadow';
+          });
+        } catch (e) {}
+      }
+    }
+
+    function alternarWakeLock() {
+      if (wakeLockSentinel) {
+        wakeLockSentinel.release();
+        wakeLockSentinel = null;
+      } else {
+        ativarWakeLock();
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && !wakeLockSentinel) {
+        ativarWakeLock();
+      }
+    });
+
+    function definirModoPilotagem(modo) {
+      modoPilotagem = modo;
+      const btnEco = document.getElementById('btn-modo-eco');
+      const btnNormal = document.getElementById('btn-modo-normal');
+
+      if (modo === 'eco') {
+        btnEco.className = "px-3 py-1 rounded-lg text-xs font-extrabold bg-[#e2b245] text-black";
+        btnNormal.className = "px-3 py-1 rounded-lg text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700";
+      } else {
+        btnNormal.className = "px-3 py-1 rounded-lg text-xs font-extrabold bg-[#e2b245] text-black";
+        btnEco.className = "px-3 py-1 rounded-lg text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700";
+      }
+
+      if (ultimaRotaDados) {
+        atualizarMetricasRota(ultimaRotaDados.distance);
+      }
+    }
+
+    function limparRota() {
+      if (linhaRota) {
+        map.removeLayer(linhaRota);
+        linhaRota = null;
+      }
+      if (marcadorDestino) {
+        map.removeLayer(marcadorDestino);
+        marcadorDestino = null;
+      }
+      ultimaRotaDados = null;
+      document.getElementById('btn-limpar-rota').classList.add('hidden');
+      document.getElementById('distancia-manobra').innerText = 'Pronto';
+      document.getElementById('rua-manobra').innerText = 'Toque na lupa abaixo ou no mapa';
+      document.getElementById('via-atual-texto').innerText = 'Ciclovia / Via';
+      document.getElementById('hora-chegada').innerText = '--:--';
+      document.getElementById('tempo-texto').innerText = '0 min';
+      document.getElementById('distancia-texto').innerText = '0 km';
+      recentralizarUsuario();
+    }
+
     map.on('dragstart', () => {
       seguirUsuario = false;
       const btn = document.getElementById('btn-recentralizar');
@@ -256,7 +353,6 @@
       badge.classList.remove('hidden');
     });
 
-    // Recentraliza a câmera e reativa o seguimento
     function recentralizarUsuario() {
       seguirUsuario = true;
       const btn = document.getElementById('btn-recentralizar');
@@ -268,7 +364,6 @@
       aplicarOrientacaoMapa(anguloAtual);
     }
 
-    // Alterna entre Modo Bússola (Proa para cima) e Modo Norte Fixo
     async function alternarModoBussola() {
       modoBussolaAtivo = !modoBussolaAtivo;
       const btn = document.getElementById('btn-bussola');
@@ -282,18 +377,17 @@
         btn.classList.add('border-[#e2b245]');
         btn.classList.remove('border-zinc-600');
         label.innerText = 'Bússola ON';
-        label.className = 'text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-[#e2b245] border border-[#e2b245]/30 shadow';
+        label.className = 'mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-[#e2b245] border border-[#e2b245]/30 shadow';
       } else {
         btn.classList.remove('border-[#e2b245]');
         btn.classList.add('border-zinc-600');
         label.innerText = 'Norte Fixo';
-        label.className = 'text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-zinc-400 border border-zinc-700 shadow';
+        label.className = 'mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a]/90 text-zinc-400 border border-zinc-700 shadow';
       }
 
       aplicarOrientacaoMapa(anguloAtual);
     }
 
-    // Aplica a rotação no mapa, na agulha da bússola e no cursor da scooter
     function aplicarOrientacaoMapa(rumoGraus) {
       if (rumoGraus === null || isNaN(rumoGraus)) return;
       anguloAtual = rumoGraus;
@@ -341,14 +435,14 @@
 
     function alternarTemaMapa() {
       const mapDiv = document.getElementById('map');
-      const btn = document.getElementById('btn-tema-mapa');
+      const btn = document.getElementById('btn-sol-noite');
       if (mapaEscuroAtivo) {
         mapDiv.classList.remove('mapa-escuro');
-        btn.innerText = 'Original (Alternar para Escuro)';
+        btn.classList.add('border-[#e2b245]', 'bg-[#e2b245]/20');
         mapaEscuroAtivo = false;
       } else {
         mapDiv.classList.add('mapa-escuro');
-        btn.innerText = 'Escuro (Alternar para Original)';
+        btn.classList.remove('border-[#e2b245]', 'bg-[#e2b245]/20');
         mapaEscuroAtivo = true;
       }
     }
@@ -429,6 +523,32 @@
 
     function abrirAnuncio() {
       document.getElementById('ad-gotrix').classList.remove('hidden');
+    }
+
+    function atualizarMetricasRota(distanciaMetros) {
+      const distanciaKm = (distanciaMetros / 1000).toFixed(1);
+      const velocidadeMedia = modoPilotagem === 'eco' ? 18 : 26;
+      const tempoMinutos = Math.max(1, Math.round((distanciaMetros / 1000) / velocidadeMedia * 60));
+
+      const chegada = new Date(Date.now() + tempoMinutos * 60000);
+      const horaFormatada = chegada.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+      document.getElementById('hora-chegada').innerText = horaFormatada;
+      document.getElementById('distancia-texto').innerText = `${distanciaKm} km`;
+      document.getElementById('tempo-texto').innerText = `${tempoMinutos} min`;
+
+      // Estimativa simples de consumo de bateria
+      const fatorConsumo = modoPilotagem === 'eco' ? 1.8 : 2.5;
+      const bateriaEstimada = Math.min(99, Math.max(2, Math.round(parseFloat(distanciaKm) * fatorConsumo)));
+
+      const badgeRelevo = document.getElementById('badge-relevo');
+      if (modoPilotagem === 'eco') {
+        badgeRelevo.innerText = `Eco ~${bateriaEstimada}% ⚡`;
+        badgeRelevo.className = "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400";
+      } else {
+        badgeRelevo.innerText = `Normal ~${bateriaEstimada}%`;
+        badgeRelevo.className = "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400";
+      }
     }
 
     function iniciarGPS() {
@@ -515,6 +635,7 @@
 
         if (data.code === 'Ok' && data.routes.length > 0) {
           const rota = data.routes[0];
+          ultimaRotaDados = rota;
           
           if (linhaRota) map.removeLayer(linhaRota);
 
@@ -529,6 +650,7 @@
           }
 
           recentralizarUsuario();
+          document.getElementById('btn-limpar-rota').classList.remove('hidden');
 
           const passos = rota.legs[0].steps;
           if (passos && passos.length > 0) {
@@ -542,24 +664,7 @@
             document.getElementById('via-atual-texto').innerText = passos[0].name || "Via Local";
           }
 
-          const distanciaKm = (rota.distance / 1000).toFixed(1);
-          const tempoMinutos = Math.max(1, Math.round((rota.distance / 1000) / 20 * 60));
-
-          const chegada = new Date(Date.now() + tempoMinutos * 60000);
-          const horaFormatada = chegada.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-          document.getElementById('hora-chegada').innerText = horaFormatada;
-          document.getElementById('distancia-texto').innerText = `${distanciaKm} km`;
-          document.getElementById('tempo-texto').innerText = `${tempoMinutos} min`;
-
-          const badgeRelevo = document.getElementById('badge-relevo');
-          if (distanciaKm > 4) {
-            badgeRelevo.innerText = "Subidas ⚠️";
-            badgeRelevo.className = "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400";
-          } else {
-            badgeRelevo.innerText = "Plano ⚡";
-            badgeRelevo.className = "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400";
-          }
+          atualizarMetricasRota(rota.distance);
         }
       } catch (e) {
         alert("Erro ao traçar rota.");
@@ -567,6 +672,7 @@
     }
 
     iniciarGPS();
+    ativarWakeLock();
   </script>
 </body>
 </html>
