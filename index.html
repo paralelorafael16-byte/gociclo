@@ -194,7 +194,7 @@
           <p id="rua-manobra" class="truncate text-sm text-yellow-200"></p>
         </div>
       </div>
-      <p class="cockpit-status" id="gps-status" role="status">Toque em Ativar GPS para usar sua localização.</p>
+      <p class="cockpit-status" id="gps-status" role="status">Solicitando sua localização…</p>
     </div>
   </header>
   <div class="cockpit-controls">
@@ -1544,6 +1544,7 @@
     }
 
     atualizarIndicadorBateriaVertical();
+    iniciarGPS();
   </script>
 </body>
 </html>
