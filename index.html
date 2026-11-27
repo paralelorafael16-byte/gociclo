@@ -298,7 +298,14 @@
         <input id="origem-input" class="w-full bg-zinc-900 rounded-lg p-2" placeholder="Usar minha localização">
         <label for="destino-input" class="cockpit-label">Destino</label>
         <input id="destino-input" class="w-full bg-zinc-900 rounded-lg p-2" placeholder="Endereço ou nome do local" onkeydown="if(event.key === 'Enter') buscarEndereco()">
-        <button class="cockpit-button cockpit-primary w-full" onclick="buscarEndereco()">Ver trajeto</button>
+        <button class="cockpit-button cockpit-primary w-full" onclick="buscarEndereco()">Buscar endereços</button>
+        <div id="escolhas" hidden class="space-y-2">
+          <label for="origens">Origem encontrada</label><select id="origens" class="w-full bg-zinc-900 p-2"></select>
+          <label for="destinos">Destino encontrado</label><select id="destinos" class="w-full bg-zinc-900 p-2"></select>
+          <p id="dist-previa" class="cockpit-status"></p>
+          <button class="cockpit-button cockpit-primary w-full" onclick="confirmarEndereco()">Calcular trajeto</button>
+        </div>
+        <p id="status-busca" role="status"></p>
       </div>
       <div id="form-bateria" class="space-y-3">
         <label for="veiculo-input" class="cockpit-label block">Veículo</label>
@@ -369,6 +376,7 @@
       <button class="cockpit-button" id="btn-ciclo" onclick="selecionarRota('ciclo')">Priorizar ciclovias</button>
       <button class="cockpit-button hidden" id="btn-curta" onclick="selecionarRota('curta')">Mais curta</button>
     </div>
+    <p id="cobertura" class="cockpit-status"></p>
     <div class="cockpit-metrics">
       <div><span class="cockpit-label" id="rotulo-tempo">Tempo</span><strong id="tempo-texto">—</strong></div>
       <div><span class="cockpit-label" id="rotulo-distancia">Distância</span><strong id="distancia-texto">—</strong></div>
@@ -1204,44 +1212,68 @@
       }
     }
 
+    let candidatos;
+    const campo = id => document.getElementById(id);
     async function localizarEndereco(texto) {
-      const params = new URLSearchParams({ q: texto, lat: posAtual[0], lon: posAtual[1], limit: 1 });
+      const params = new URLSearchParams({ q: texto, lat: posAtual[0], lon: posAtual[1], limit: 5 });
       const resposta = await fetch('https://photon.komoot.io/api/?' + params, { signal: AbortSignal.timeout(12000) });
       if (!resposta.ok) throw Error('Busca indisponível. Tente novamente.');
-      const lugar = (await resposta.json()).features?.[0];
-      if (!lugar) throw Error('Endereço não encontrado: ' + texto);
-      const [lon, lat] = lugar.geometry.coordinates;
-      const endereco = lugar.properties;
-      const nome = [endereco.name || texto, endereco.housenumber, endereco.city, endereco.state].filter(Boolean).join(', ');
-      return { ponto: [lat, lon], nome };
+      const lugares = (await resposta.json()).features || [];
+      if (!lugares.length) throw Error('Endereço não encontrado: ' + texto);
+      return lugares.map(({properties: e, geometry}) => ({
+        ponto: [geometry.coordinates[1], geometry.coordinates[0]],
+        nome: [...new Set([e.name || texto, e.street, e.housenumber, e.district, e.city || e.county, e.state, e.country].filter(Boolean))].join(', ')
+      }));
     }
 
+    function invalidarEscolhas() {
+      pedidoRota++;
+      candidatos = null;
+      campo('escolhas').hidden = true;
+      campo('status-busca').textContent = '';
+    }
+    for (const id of ['origem-input','destino-input']) campo(id).addEventListener('input', invalidarEscolhas);
+    function atualizarDistanciaPrevia() {
+      if (!candidatos) return;
+      const origem = candidatos.origens[campo('origens').selectedIndex];
+      const destino = candidatos.destinos[campo('destinos').selectedIndex];
+      const km = map.distance(origem.ponto, destino.ponto) / 1000;
+      campo('dist-previa').textContent = km.toLocaleString('pt-BR', {maximumFractionDigits:1}) + ' km em linha reta. Confira as cidades antes de calcular.';
+    }
+    for (const id of ['origens','destinos']) campo(id).addEventListener('change', atualizarDistanciaPrevia);
     async function buscarEndereco() {
-      const texto = document.getElementById('destino-input').value.trim();
-      const origemTexto = document.getElementById('origem-input').value.trim();
-      if (!texto) return;
-      if (!origemTexto && !gpsPronto && !posicaoAproximada) {
-        fecharBusca();
-        definirStatus('Informe o endereço de origem para traçar a rota.');
+      invalidarEscolhas();
+      const numero = pedidoRota;
+      const texto = campo('destino-input').value.trim();
+      const origemTexto = campo('origem-input').value.trim();
+      if (!texto || (!origemTexto && !gpsPronto && !posicaoAproximada)) {
+        campo('status-busca').textContent = !texto ? 'Digite o destino.' : 'Informe a origem ou ative o GPS.';
         return;
       }
-      const numero = ++pedidoRota;
-      fecharBusca();
-      definirStatus('Buscando endereço…');
+      campo('status-busca').textContent = 'Buscando endereços…';
       try {
-        const [destino, origem] = await Promise.all([
-          localizarEndereco(texto), origemTexto ? localizarEndereco(origemTexto) : { ponto: gpsPronto ? posAtual : posicaoAproximada, nome: gpsPronto ? 'Minha localização' : 'Localização aproximada' },
+        const [origens, destinos] = await Promise.all([
+          origemTexto ? localizarEndereco(origemTexto) : [{ ponto: gpsPronto ? posAtual : posicaoAproximada, nome: gpsPronto ? 'Minha localização' : 'Localização aproximada' }],
+          localizarEndereco(texto)
         ]);
         if (numero !== pedidoRota) return;
-        const distancia = map.distance(origem.ponto, destino.ponto) / 1000;
-        if (!window.confirm('Origem: ' + origem.nome + '\nDestino: ' + destino.nome + '\nDistância em linha reta: ' + distancia.toFixed(1) + ' km.\nCalcular este trajeto?')) {
-          abrirPainel('destino');
-          return;
+        candidatos = {origens, destinos, manual: Boolean(origemTexto)};
+        for (const [id, lista] of Object.entries({origens, destinos})) {
+          campo(id).replaceChildren(...lista.map(item => new Option(item.nome)));
         }
-        await calcularRotas(origem.ponto, destino, false, Boolean(origemTexto));
+        campo('escolhas').hidden = false;
+        campo('status-busca').textContent = '';
+        atualizarDistanciaPrevia();
       } catch (erro) {
-        if (numero === pedidoRota) definirStatus(erro.message || 'Busca indisponível.');
+        if (numero === pedidoRota) campo('status-busca').textContent = erro.message;
       }
+    }
+    function confirmarEndereco() {
+      if (!candidatos) return;
+      const origem = candidatos.origens[campo('origens').selectedIndex];
+      const destino = candidatos.destinos[campo('destinos').selectedIndex];
+      fecharBusca();
+      calcularRotas(origem.ponto, destino, false, candidatos.manual);
     }
 
     function decodificarLinha(texto) {
@@ -1283,11 +1315,56 @@
         throw Error('Rota recusada (HTTP ' + resposta.status + '). ' + (detalhe || 'Confira a origem e o destino.'));
       }
       const rota = resultado.routes?.[0];
-      if (typeof rota?.geometry === 'string') rota.geometry = decodificarLinha(rota.geometry);
+      if (typeof rota?.geometry === 'string') {
+        rota.linhaCodificada = rota.geometry;
+        rota.geometry = decodificarLinha(rota.geometry);
+      }
       if (!rota || !Number.isFinite(rota.distance) || !Number.isFinite(rota.duration) || !rota.geometry?.coordinates?.length || !rota.legs?.[0]?.steps?.length) {
         throw Error('O serviço não retornou um trajeto completo.');
       }
       return rota;
+    }
+
+    async function medirCiclovias(rota) {
+      const resposta = await fetch('https://valhalla1.openstreetmap.de/trace_attributes', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, signal: AbortSignal.timeout(12000),
+        body: JSON.stringify({encoded_polyline: rota.linhaCodificada, costing:'bicycle', shape_match:'edge_walk', units:'kilometers',
+          filters:{action:'include', attributes:['edge.use','edge.length','edge.cycle_lane']}})
+      });
+      if (!resposta.ok) throw Error();
+      const {edges} = await resposta.json();
+      if (!edges?.length || edges.some(e => !Number.isFinite(e.length) || !e.use)) throw Error();
+      const km = edges.reduce((n,e) => n + (e.use === 'cycleway' || ['dedicated','separated'].includes(e.cycle_lane) ? e.length : 0), 0);
+      return km.toLocaleString('pt-BR',{maximumFractionDigits:2}) + ' km de ciclovias e ciclofaixas mapeadas';
+    }
+    async function identificarParques(rota) {
+      const pontos = rota.geometry.coordinates;
+      const partes = Math.min(16,pontos.length);
+      const consultas = Array.from({length:partes}, (_,i) => {
+        const [lon,lat] = pontos[Math.floor(i*(pontos.length-1)/Math.max(1,partes-1))];
+        return 'is_in(' + lat + ',' + lon + ');';
+      });
+      const query = '[out:json][timeout:8];(' + consultas.join('') + ');area._["leisure"="park"];out tags;';
+      const resp = await fetch('https://overpass-api.de/api/interpreter', {method:'POST', body:new URLSearchParams({data:query}), signal:AbortSignal.timeout(12000)});
+      if (!resp.ok) throw Error();
+      const dados = await resp.json();
+      if (dados.remark || !Array.isArray(dados.elements)) throw Error();
+      const nomes = [...new Set(dados.elements.map(p => p.tags?.name || 'Parque sem nome'))];
+      return nomes.length ? 'Passagem mapeada: ' + nomes.join(', ') : 'Nenhum parque identificado nos pontos consultados';
+    }
+    function mostrarCobertura(rota) {
+      const painel = campo('cobertura');
+      painel.hidden = emNavegacao;
+      if (emNavegacao) return;
+      const diferenca = rotas.curta && modoRota === 'curta' ? ' · ' + formatarDistanciaCurta(rotas.ciclo.distance-rota.distance) + ' a menos' : '';
+      painel.textContent = 'Consultando ciclovias e parques…' + diferenca;
+      rota.consulta ??= Promise.all([
+        medirCiclovias(rota).catch(() => 'Quilometragem ciclável indisponível'),
+        identificarParques(rota).catch(() => 'Dados de parques indisponíveis')
+      ]);
+      rota.consulta.then(dados => {
+        if (ultimaRotaDados === rota && !emNavegacao) painel.textContent = dados.join(' · ') + diferenca;
+      });
     }
 
     async function calcularRotas(origem, destino, recalculo = false, origemManual = false) {
@@ -1303,7 +1380,7 @@
         rotas = recalculo && modoAnterior === 'curta' ? { curta: preferida } : { ciclo: preferida };
         if (alternativa && alternativa.distance + 30 < preferida.distance) rotas.curta = alternativa;
         if (!recalculo) {
-          destinoRota = { ...destino, origemManual };
+          destinoRota = { ...destino, origemManual, partida: origem };
           marcadorDestino?.remove();
           marcadorDestino = L.marker(destino.ponto, { icon: iconeDestino }).addTo(map);
         }
@@ -1313,6 +1390,7 @@
         selecionarRota(recalculo ? modoAnterior : 'ciclo');
         if (recalculo) acompanharRota(0, false);
         definirStatus(recalculo ? 'Trajeto atualizado' : 'Prévia · acesso depende da sinalização local');
+        return true;
       } catch (erro) {
         if (numero === pedidoRota) definirStatus(erro.message || 'Não foi possível calcular o trajeto.');
       }
@@ -1339,6 +1417,8 @@
         btn.classList.toggle('cockpit-primary', perfil === modo);
         btn.setAttribute('aria-pressed', String(perfil === modo));
       }
+      mostrarCobertura(rota);
+      campo('btn-iniciar').textContent = destinoRota?.origemManual ? 'Iniciar daqui' : 'Iniciar navegação';
       if (!emNavegacao) {
         // Leaflet's viewport extends outside the physical screen in cockpit mode.
         const larguraExtra = (map.getSize().x - window.innerWidth) / 2;
@@ -1353,16 +1433,18 @@
       renderizarListaEtapas();
     }
 
-    function iniciarNavegacao() {
+    async function iniciarNavegacao() {
       if (!gpsPronto) {
-        definirStatus('A navegação precisa de um sinal GPS. A prévia permanece disponível.');
+        iniciarGPS();
         return;
       }
       if (!ultimaRotaDados || !destinoRota) return;
-      if (destinoRota.origemManual) {
-        definirStatus('Refaça a rota com “Usar minha localização” para iniciar daqui.');
-        return;
+      if (destinoRota.origemManual || map.distance(posAtual,destinoRota.partida) > 60) {
+        const perfil = modoRota;
+        if (!await calcularRotas(posAtual, destinoRota, false, false) || !gpsPronto) return;
+        if (perfil === 'curta' && rotas.curta) selecionarRota('curta');
       }
+      campo('cobertura').hidden = true;
       emNavegacao = true;
       document.getElementById('manobra-cockpit').classList.remove('hidden');
       document.getElementById('busca-cockpit').classList.add('hidden');
