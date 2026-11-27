@@ -194,11 +194,11 @@
           <p id="rua-manobra" class="truncate text-sm text-yellow-200"></p>
         </div>
       </div>
-      <p class="cockpit-status" id="gps-status" role="status">Obtendo localização…</p>
+      <p class="cockpit-status" id="gps-status" role="status">Toque em Ativar GPS para usar sua localização.</p>
     </div>
   </header>
   <div class="cockpit-controls">
-    <button class="cockpit-button" id="btn-recentralizar" onclick="recentralizarUsuario()" aria-label="Recentralizar mapa">◎</button>
+    <button class="cockpit-button" id="btn-recentralizar" onclick="recentralizarUsuario()" aria-label="Ativar GPS">Ativar GPS</button>
     <button class="cockpit-button hidden" id="btn-vista" onclick="alternarPerspectiva()" aria-pressed="false">3D</button>
     <span id="badge-recentralizar" class="hidden"></span>
   </div>
@@ -937,7 +937,7 @@
       badge.classList.add('hidden');
 
       if (!gpsPronto) {
-        definirStatus('GPS indisponível · informe a origem');
+        iniciarGPS();
         return;
       }
       map.flyTo(posAtual, 17, { duration: 0.6 });
@@ -1122,18 +1122,52 @@
         : sobraPct < 20 ? 'A previsão indica pouca carga na chegada.' : '';
       }
 
+    let observadorGPS = null;
     function iniciarGPS() {
-      if (!navigator.geolocation) {
-        definirStatus('GPS indisponível · informe a origem');
+      if (!window.L) {
+        definirStatus('O mapa precisa carregar. Verifique a conexão e atualize a página.');
         return;
       }
-      navigator.geolocation.watchPosition(position => {
+      if (!window.isSecureContext) {
+        definirStatus('Abra o app em HTTPS ou em localhost para usar o GPS.');
+        return;
+      }
+      const politica = document.permissionsPolicy || document.featurePolicy;
+      if (politica && !politica.allowsFeature('geolocation')) {
+        definirStatus('Esta página bloqueou o GPS. Abra o app em uma aba própria e confira a permissão de localização do site.');
+        return;
+      }
+      if (!navigator.geolocation) {
+        definirStatus('Localização indisponível neste navegador. Abra o app no Safari ou Chrome.');
+        return;
+      }
+      if (observadorGPS !== null) navigator.geolocation.clearWatch(observadorGPS);
+      definirStatus('Aguardando localização. Permita o acesso se o navegador perguntar.');
+      function falhaGPS(erro) {
+        gpsPronto = false;
+        velocidadeAtual = null;
+        const botao = document.getElementById('btn-recentralizar');
+        botao.textContent = 'Ativar GPS';
+        botao.setAttribute('aria-label', 'Ativar GPS');
+        const mensagens = {
+          1: 'Acesso bloqueado. Permita a localização nas permissões do site e do aparelho e toque em Ativar GPS.',
+          2: 'O aparelho não conseguiu determinar sua posição. Confira se a localização está ligada e tente novamente.',
+          3: 'A localização demorou a responder. Aguardando sinal. Você também pode tocar em Ativar GPS para tentar novamente.'
+        };
+        definirStatus(mensagens[erro.code] || 'Não foi possível acessar a localização. Confira as permissões do navegador.');
+        if (ultimaRotaDados) atualizarMetricasRota(ultimaRotaDados.distance);
+      }
+      function receberPosicao(position) {
         const { latitude, longitude, speed, heading, accuracy } = position.coords;
         if (accuracy > 100) {
+          if (!gpsPronto && !emNavegacao && !ultimaRotaDados) map.setView([latitude, longitude], 13, { animate: false });
           gpsPronto = false;
-          definirStatus('Aguardando uma localização mais precisa…');
+          definirStatus('Posição aproximada (±' + Math.round(accuracy) + ' m). Aguardando sinal preciso para navegar.');
           return;
         }
+        const botao = document.getElementById('btn-recentralizar');
+        botao.textContent = '◎';
+        botao.setAttribute('aria-label', 'Recentralizar mapa');
         const primeira = !gpsPronto;
         const novaPosicao = [latitude, longitude];
         gpsPronto = true;
@@ -1151,12 +1185,14 @@
           acompanharRota(accuracy);
         }
         if (primeira) definirStatus(emNavegacao ? 'Navegação em andamento' : 'GPS disponível');
-      }, () => {
-        gpsPronto = false;
-        velocidadeAtual = null;
-        definirStatus(emNavegacao ? 'GPS indisponível no momento' : 'GPS indisponível · informe a origem');
-        if (ultimaRotaDados) atualizarMetricasRota(ultimaRotaDados.distance);
-      }, { enableHighAccuracy: true, maximumAge: 1500, timeout: 10000 });
+      }
+      try {
+        observadorGPS = navigator.geolocation.watchPosition(receberPosicao, falhaGPS, {
+          enableHighAccuracy: true, maximumAge: 1500, timeout: 20000
+        });
+      } catch (erro) {
+        falhaGPS(erro);
+      }
     }
 
     async function localizarEndereco(texto) {
@@ -1382,7 +1418,6 @@
     }
 
     atualizarIndicadorBateriaVertical();
-    iniciarGPS();
   </script>
 </body>
 </html>
