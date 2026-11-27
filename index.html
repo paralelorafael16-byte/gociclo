@@ -5,8 +5,83 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>GoTrix - GPS para Mobilidade Urbana</title>
   
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+*,::before,::after{box-sizing:border-box;border:0 solid #3f3f46}body,p,h3{margin:0}button,input,select{font:inherit;color:inherit}button{cursor:pointer;background:transparent}a{color:inherit;text-decoration:inherit}
+.flex{display:flex}.block{display:block}.fixed{position:fixed}.flex-1{flex:1}.items-center{align-items:center}.justify-between{justify-content:space-between}.justify-center{justify-content:center}.min-w-0{min-width:0}.shrink-0{flex-shrink:0}.w-full{width:100%}.max-w-md{max-width:28rem}.mx-auto{margin-inline:auto}.inset-x-0{inset-inline:0}.overflow-y-auto{overflow-y:auto}.overflow-hidden,.truncate{overflow:hidden}.truncate,.whitespace-nowrap{white-space:nowrap}.truncate{text-overflow:ellipsis}.cursor-pointer{cursor:pointer}.select-none{user-select:none}.rounded-lg{border-radius:.5rem}.rounded-xl{border-radius:.75rem}.rounded-2xl{border-radius:1rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.font-black{font-weight:900}.font-extrabold{font-weight:800}.font-bold{font-weight:700}.font-semibold{font-weight:600}.text-xs{font-size:.75rem}.text-sm{font-size:.875rem}.text-3xl{font-size:1.875rem}.text-center{text-align:center}.uppercase{text-transform:uppercase}.tracking-wider{letter-spacing:.05em}.tracking-widest{letter-spacing:.1em}.leading-snug{line-height:1.375}.shadow-2xl{box-shadow:0 18px 48px #0009}.transition{transition:color .15s,background .15s}.z-30{z-index:30}
+.accent-\[\#e2b245\]{accent-color:#e2b245}
+.active\:scale-95:active{transform:scale(.95)}
+.bg-\[\#0d0d0d\]{background-color:#0d0d0d}
+.bg-\[\#121212\]{background-color:#121212}
+.bg-\[\#161616\]{background-color:#161616}
+.bg-\[\#1a1a1a\]{background-color:#1a1a1a}
+.bg-\[\#e2b245\]\/15{background-color:#e2b24526}
+.bg-zinc-900{background-color:#18181b}
+.border-\[\#e2b245\]\/30{border-color:#e2b2454c}
+.border-\[\#e2b245\]\/40{border-color:#e2b24566}
+.border-\[\#e2b245\]\/50{border-color:#e2b2457f}
+.border-zinc-700{border-color:#3f3f46}
+.border-zinc-800{border-color:#27272a}
+.border-zinc-800\/70{border-color:#27272ab2}
+.border-zinc-800\/90{border-color:#27272ae5}
+.bottom-16{bottom:4rem}
+.divide-y > * + *{border-top-width:1px}
+.divide-zinc-800\/80 > * + *{border-color:#27272acc}
+.focus\:border-\[\#e2b245\]:focus{border-color:#e2b245}
+.gap-1\.5{gap:0.375rem}
+.gap-2{gap:0.5rem}
+.gap-3{gap:0.75rem}
+.h-8{height:2rem}
+.hover\:bg-\[\#e2b245\]\/25:hover{background-color:#e2b24540}
+.hover\:bg-zinc-800:hover{background-color:#27272a}
+.hover\:bg-zinc-900\/90:hover{background-color:#18181be5}
+.hover\:border-\[\#e2b245\]:hover{border-color:#e2b245}
+.hover\:text-white:hover{color:#ffffff}
+.left-0{left:0rem}
+.left-4{left:1rem}
+.max-h-60{max-height:15rem}
+.max-h-\[75vh\]{max-height:75vh}
+.mb-1\.5{margin-bottom:0.375rem}
+.ml-1{margin-left:0.25rem}
+.mt-2{margin-top:0.5rem}
+.p-2{padding:0.5rem}
+.p-4{padding:1rem}
+.pb-2{padding-bottom:0.5rem}
+.pb-2\.5{padding-bottom:0.625rem}
+.pt-1{padding-top:0.25rem}
+.pt-2{padding-top:0.5rem}
+.pt-2\.5{padding-top:0.625rem}
+.px-2{padding-inline:0.5rem}
+.px-2\.5{padding-inline:0.625rem}
+.px-3{padding-inline:0.75rem}
+.px-4{padding-inline:1rem}
+.py-1{padding-block:0.25rem}
+.py-1\.5{padding-block:0.375rem}
+.py-2\.5{padding-block:0.625rem}
+.py-3{padding-block:0.75rem}
+.py-6{padding-block:1.5rem}
+.right-0{right:0rem}
+.right-4{right:1rem}
+.shadow-\[0_-10px_30px_rgba\(0\,0\,0\,0\.9\)\]{box-shadow:0 -10px 30px #000e}
+.space-y-2 > * + *{margin-top:0.5rem}
+.space-y-3 > * + *{margin-top:0.75rem}
+.space-y-3\.5 > * + *{margin-top:0.875rem}
+.text-\[\#e2b245\]{color:#e2b245}
+.text-\[10px\]{font-size:10px}
+.text-\[11px\]{font-size:11px}
+.text-\[9px\]{font-size:9px}
+.text-emerald-400{color:#34d399}
+.text-red-400{color:#f87171}
+.text-white{color:#ffffff}
+.text-yellow-200{color:#fef08a}
+.text-yellow-300{color:#fde047}
+.text-yellow-400{color:#facc15}
+.text-zinc-200{color:#e4e4e7}
+.text-zinc-300{color:#d4d4d8}
+.text-zinc-400{color:#a1a1aa}
+.text-zinc-500{color:#71717a}
+.top-20{top:5rem}
+.w-8{width:2rem}
+</style>
   
   <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -32,8 +107,8 @@
 
     #map { 
       position: absolute;
-      width: 150vmax;
-      height: 150vmax;
+      width: 100vw;
+      height: 100%;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%) rotate(0deg);
@@ -82,7 +157,7 @@
     .cockpit-controls button { box-shadow: 0 5px 15px #0009; }
     #map-viewport { perspective: 930px; }
     #map { transform: translate(-50%, -50%) rotateX(var(--pitch, 0deg)) rotateZ(var(--bearing, 0deg)) scale(var(--map-scale, 1)); }
-    body.perspectiva #map { --pitch: 46deg; --map-scale: 1.42; }
+    body.perspectiva #map { width: 150vmax; height: 150vmax; --pitch: 46deg; --map-scale: 1.42; }
     body.perspectiva #map-viewport { pointer-events: none; }
     body.perspectiva::after { content: ''; position: fixed; z-index: 2; inset: 0; pointer-events: none; background: linear-gradient(180deg,#0b0d11bb,transparent 42%,transparent 67%,#0b0d11aa); }
     .cockpit-panel::before { content: ''; pointer-events: none; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(115deg,#ffe59e19,transparent 22%,transparent 80%,#ffe59e0b); }
@@ -305,7 +380,7 @@
       <button id="btn-iniciar" class="cockpit-button cockpit-primary" onclick="iniciarNavegacao()">Iniciar navegação</button>
     </div>
   </section>
-  <div class="map-credit"><a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> · <a href="https://www.cyclosm.org/">CyclOSM</a></div>
+  <div class="map-credit"><span id="mapa-rede" role="status"></span> <button hidden id="mapa-tentar" onclick="carregarMapa(0)">Tentar novamente</button> <a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> <span hidden id="credito-ciclo">· <a href="https://www.cyclosm.org/">CyclOSM</a></span></div>
   <div id="map-viewport">
     <div id="map" class="mapa-escuro"></div>
   </div>
@@ -369,10 +444,52 @@
 
     const map = L.map('map', { zoomControl: false }).setView(posAtual, 17);
     
-    L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap &copy; CyclOSM',
-      maxZoom: 20
-    }).addTo(map);
+    const provedores = [
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png'
+    ];
+    let camadaAtual;
+    let prazoMapa;
+
+    function carregarMapa(indice) {
+      clearTimeout(prazoMapa);
+      if (camadaAtual) camadaAtual.off().remove();
+      const aviso = document.getElementById('mapa-rede');
+      const tentar = document.getElementById('mapa-tentar');
+      tentar.hidden = true;
+      aviso.textContent = indice ? 'Carregando mapa alternativo…' : '';
+      document.getElementById('credito-ciclo').hidden = !indice;
+      const camada = L.tileLayer(provedores[indice], {
+        maxNativeZoom: 19, maxZoom: 20, keepBuffer: 1, updateWhenIdle: true
+      });
+      camadaAtual = camada;
+      function falha() {
+        if (camada !== camadaAtual) return;
+        clearTimeout(prazoMapa);
+        if (indice === 0) carregarMapa(1);
+        else {
+          aviso.textContent = 'Mapa parcialmente ou totalmente indisponível.';
+          tentar.hidden = false;
+        }
+      }
+      let falhas = 0;
+      camada.on('loading', () => {
+        clearTimeout(prazoMapa);
+        falhas = 0;
+        prazoMapa = setTimeout(falha, 12000);
+      });
+      camada.on('tileerror', () => {
+        if (++falhas === 2) falha();
+      });
+      camada.on('load', () => {
+        if (camada !== camadaAtual) return;
+        clearTimeout(prazoMapa);
+        if (falhas) falha();
+        else { aviso.textContent = ''; tentar.hidden = true; }
+      });
+      camada.addTo(map);
+    }
+    carregarMapa(0);
 
     function salvarPreferencias() {
       try {
@@ -979,6 +1096,7 @@
     function aplicarPerspectiva(ativa) {
       perspectiva = ativa;
       document.body.classList.toggle('perspectiva', ativa);
+      map.invalidateSize({ pan: false });
       const botao = document.getElementById('btn-vista');
       botao.textContent = ativa ? '2D' : '3D';
       botao.setAttribute('aria-pressed', String(ativa));
