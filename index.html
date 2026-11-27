@@ -89,144 +89,307 @@
 
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
   <style>
-    body, html { 
-      margin: 0; padding: 0; height: 100%; overflow: hidden; 
-      font-family: 'Poppins', sans-serif;
-      background-color: #0b0b0b;
+    :root {
+      --gold: #f9d34f;
+      --ink: #f6f8fb;
+      --muted: #aebbc7;
+      --surface: #101820;
+      --edge: #859aa439;
+      --esq: max(12px, env(safe-area-inset-left));
+      --dir: max(12px, env(safe-area-inset-right));
+      --topo: max(10px, env(safe-area-inset-top));
+      --base: max(10px, env(safe-area-inset-bottom));
+      --raio: 24px;
     }
-
-    #map-viewport {
-      position: fixed;
-      inset: 0;
-      overflow: hidden;
-      background-color: #111111;
-      z-index: 1;
+    html, body { height: 100%; margin: 0; overflow: hidden }
+    body {
+      height: 100dvh;
+      overscroll-behavior: none;
+      background: #111a21;
+      color: var(--ink);
+      font: 400 16px/1.35 Geist, system-ui, sans-serif;
     }
-
-    #map { 
-      position: absolute;
-      width: 100vw;
-      height: 100%;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(0deg);
-      transform-origin: center center;
-      transition: transform 0.35s ease-out;
-      background-color: #111111;
+    button, input, select { font: inherit; color: inherit }
+    button { touch-action: manipulation }
+    button:active { filter: brightness(.87) }
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 3px;
     }
-    
+    input, select { min-height: 48px; max-width: 100%; color-scheme: dark }
+    [hidden], .hidden { display: none !important }
+    #map-viewport { position: fixed; inset: 0; overflow: hidden; z-index: 1 }
+    #map, #map3d { position: absolute; inset: 0; background: #182229 }
+    #map3d, body.perspectiva #map { visibility: hidden }
+    body.perspectiva #map3d { visibility: visible }
     .mapa-escuro .leaflet-tile-pane {
-      filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(95%) saturate(140%);
+      filter: invert(100%) hue-rotate(175deg) saturate(68%) brightness(.79) contrast(1.1);
     }
-
-    .scooter-wrapper {
-      transition: transform 0.35s ease-out;
-      transform-origin: center center;
+    .rota-luz { filter: drop-shadow(0 0 4px #ffd34c88) }
+    .cursor-navegacao { display: grid; place-items: center }
+    .scooter-wrapper, .veiculo-3d {
+      position: relative;
+      width: 34px;
+      height: 42px;
+      filter: drop-shadow(0 3px 3px #0a0f17) drop-shadow(0 0 9px #f5d75aa1);
     }
-
-    ::-webkit-scrollbar {
-      width: 4px;
+    .scooter-wrapper::after, .veiculo-3d::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg,#fff5b2 50%,var(--gold) 50%);
+      clip-path: polygon(50% 0,98% 96%,50% 73%,2% 96%);
     }
-    ::-webkit-scrollbar-thumb {
-      background: #e2b245;
-      border-radius: 4px;
+    .cockpit {
+      position: fixed;
+      z-index: 1000;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(580px, calc(100% - var(--esq) - var(--dir)));
     }
-   
-    :root { --gold: #f6ca55; --panel: rgba(16,18,20,.94); }
-    body { color: #f7f7f5; }
-    .cockpit { position: fixed; z-index: 1000; left: 50%; transform: translateX(-50%); width: min(94vw, 540px); }
-    .cockpit-top { top: max(14px, env(safe-area-inset-top)); }
-    .cockpit-panel { background: linear-gradient(155deg,#242629,var(--panel) 48%); border: 1px solid #55503d; border-radius: 19px; box-shadow: inset 0 1px 0 #ffffff20, 0 14px 40px #0009; }
-    .cockpit-brand { display: flex; align-items: center; gap: 9px; font-weight: 900; letter-spacing: .06em; }
-    .cockpit-brand b { background: var(--gold); color: #101010; padding: 4px 10px; border-radius: 8px; }
-    .cockpit-top .cockpit-panel { padding: 12px; }
-    .cockpit-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
-    .cockpit-button { min-height: 43px; border: 1px solid #ffffff22; padding: 0 12px; background: #28292b; border-radius: 11px; font-weight: 700; font-size: .82rem; color: white; }
-    .cockpit-primary { background: var(--gold); color: #181408; border-color: var(--gold); }
-    .cockpit-search { flex: 1; text-align: left; }
-    .cockpit-label { font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: #c0c2c6; }
-    .cockpit-status { min-height: 1.2em; margin-top: 8px; color: #e0ded5; font-size: .74rem; }
-    .cockpit-bottom { bottom: max(27px, calc(env(safe-area-inset-bottom) + 16px)); padding: 13px; }
-    .cockpit-bottom .cockpit-row { flex-wrap: wrap; }
-    .cockpit-metrics { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 10px 0; }
-    .cockpit-metrics div { padding: 8px; border: 1px solid #ffffff17; border-radius: 10px; background: #10111399; }
-    .cockpit-metrics strong { display: block; font-size: clamp(.93rem,4vw,1.35rem); white-space: nowrap; font-variant-numeric: tabular-nums; }
-    .cockpit-controls { position: fixed; z-index: 900; right: max(12px, calc((100vw - 540px)/2)); top: 158px; display: grid; gap: 8px; }
-    .cockpit-controls button { box-shadow: 0 5px 15px #0009; }
-    #map3d {position:absolute;inset:0;visibility:hidden;background:#171e23}
-    body.perspectiva #map3d {visibility:visible}
-    body.perspectiva #map {visibility:hidden}
-    .veiculo-3d {width:28px;height:36px;filter:drop-shadow(0 2px 4px #10151c)}
-    .veiculo-3d::after {content:"";display:block;width:100%;height:100%;background:linear-gradient(100deg,#fff6c6 48%,#ffc139 49%);clip-path:polygon(50% 0,94% 95%,50% 76%,6% 95%)}
-    .cockpit-panel::before { content: ''; pointer-events: none; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(115deg,#ffe59e19,transparent 22%,transparent 80%,#ffe59e0b); }
-    .cockpit-top .cockpit-panel { position: relative; }
-    .cockpit-brand b { box-shadow: inset 0 1px 1px #fff9, 0 0 12px #f6ca5544; }
-    body.perspectiva .cockpit-metrics div { background: linear-gradient(155deg,#242520,#101113 62%); border-top-color: #f6ca5577; }
-    body.perspectiva #icone-manobra { text-shadow: 0 0 18px #f6ca5570; }
-    .rota-luz { filter: drop-shadow(0 0 5px #ffca44); }
-    .leaflet-container .leaflet-control-attribution { position: fixed; display: none; }
-    .map-credit { position: fixed; bottom: 0; right: 0; z-index: 950; color: white; background: #181818; padding: 2px 7px; font-size: 10px; }
-    #modal-busca, #painel-config, #painel-etapas { z-index: 1100; }
-    #modal-busca { max-height: calc(100dvh - 92px); overflow: auto; }
-    #painel-etapas { bottom: 25px; }
-    .hidden { display: none !important; }
-    @media(prefers-reduced-motion: reduce) { #map, .scooter-wrapper { transition: none; } }
-    .cockpit-panel {border-radius:8px 20px 8px 20px;background:linear-gradient(130deg,#262b30f5,#0c1015f5 65%);border:1px solid #535960;box-shadow:inset 0 1px #ffffff20,0 10px 32px #06090e99}
-    .cockpit-top .cockpit-panel {border-left:4px solid #ffd04a;padding:12px 16px}
-    .cockpit-brand {margin-right:auto;font-style:italic;letter-spacing:.01em;font-size:1.12rem}
-    .cockpit-brand b {background:#ffd04a;color:#0a0d11;clip-path:polygon(16% 0,100% 0,88% 100%,0 100%);border-radius:0}
-    .cockpit-button {border-radius:5px 10px;font-family:inherit}
-    .cockpit-search {background:linear-gradient(100deg,#30363e,#1b2229);border-left:2px solid #ffd04a}
-    .cockpit-metrics div {border-radius:4px;background:linear-gradient(135deg,#272d31,#13181d);border-top:2px solid #707780}
-    .cockpit-metrics div:first-child {border-top-color:#ffd04a}
-    .cockpit-metrics strong {font-family:ui-monospace,monospace;letter-spacing:-.05em;color:#fff4d0}
-    .cockpit-label {letter-spacing:.09em}
-    .cockpit-status {color:#c6cdd3}
-    #map3d .maplibregl-ctrl-attrib {margin-bottom:19px}
-    @media(min-width:840px){.cockpit{left:24px;transform:none;width:390px}.cockpit-controls{right:24px;top:20px}.cockpit-top{top:20px}.cockpit-bottom{bottom:24px}}
+    .cockpit-panel, .cockpit-controls button {
+      background: linear-gradient(142deg,#17222bed,#101820f5 58%,#10161df7);
+      border: 1px solid var(--edge);
+      box-shadow: inset 0 1px #ffffff13, 0 8px 28px #070a10a6;
+    }
+    .cockpit-panel { border-radius: var(--raio) }
+    .cockpit-top { top: var(--topo); pointer-events: none }
+    .cockpit-top button { pointer-events: auto }
+    .cockpit-row { display: flex; gap: 8px; align-items: center; justify-content: space-between }
+    .faixa-topo { padding: 6px 7px 6px 12px }
+    .cockpit-brand { display: flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 1.04rem; font-weight: 800 }
+    .cockpit-brand b {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 30px;
+      background: var(--gold);
+      color: #15191c;
+      clip-path: polygon(12% 0,100% 0,88% 100%,0 100%);
+      font-size: .85rem;
+      font-weight: 900;
+      font-style: italic;
+    }
+    .cockpit-brand small { color: var(--muted); font-size: .64rem; letter-spacing: .08em }
+    .cockpit-button {
+      min-width: 44px;
+      min-height: 46px;
+      padding: 0 14px;
+      border: 1px solid var(--edge);
+      border-radius: 15px;
+      background: #26323a;
+      color: var(--ink);
+      font-size: .88rem;
+      font-weight: 700;
+    }
+    .cockpit-primary { color: #15191b; background: var(--gold); border-color: #ffe488; box-shadow: inset 0 1px #fff8 }
+    .btn-icone { padding: 0; width: 46px; font-size: 1.25rem }
+    .btn-bateria {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff0ac;
+      font-variant-numeric: tabular-nums;
+      padding: 0 10px;
+    }
+    .icone-bateria { position: relative; width: 16px; height: 10px; border: 1px solid currentColor; border-radius: 2px }
+    .icone-bateria::before { content: ""; position: absolute; inset: 2px; background: currentColor; border-radius: 1px }
+    .icone-bateria::after { content: ""; position: absolute; right: -3px; top: 2px; width: 2px; height: 4px; background: currentColor }
+    .cockpit-status { margin-top: 7px; color: var(--muted); font-size: .77rem }
+    #gps-status {
+      width: fit-content;
+      max-width: 100%;
+      border-radius: 12px;
+      background: #101820eb;
+      border: 1px solid var(--edge);
+      padding: 5px 9px;
+      color: #e0e9ef;
+    }
+    #gps-status[data-estado="pronto"]::before {
+      content: "";
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-inline-end: 6px;
+      background: #74e3b8;
+    }
+    #manobra-cockpit { padding: 8px 12px 8px 8px; gap: 12px; margin-top: 8px }
+    #icone-manobra {
+      display: grid;
+      place-items: center;
+      flex: 0 0 58px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--gold);
+      color: #111820;
+      font-size: 1.9rem;
+      line-height: 1;
+    }
+    #distancia-manobra { font-size: clamp(1.3rem,5vw,2rem); line-height: 1.05; font-variant-numeric: tabular-nums }
+    #rua-manobra { color: #e5edf2; line-height: 1.25; font-weight: 600; margin-top: 4px }
+    .cockpit-bottom { bottom: calc(var(--base) + 18px); padding: 10px; max-height: 43dvh; overflow: auto; overscroll-behavior: contain }
+    #busca-cockpit { padding: 8px }
+    .cockpit-search {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      text-align: left;
+      padding: 0 16px;
+      min-height: 54px;
+      border-radius: 17px;
+      font-size: 1.04rem;
+    }
+    .icone-busca { width: 15px; height: 15px; border: 2px solid currentColor; border-radius: 50%; position: relative; flex: 0 0 15px }
+    .icone-busca::after { content: ""; position: absolute; width: 7px; height: 2px; background: currentColor; top: 10px; left: 10px; transform: rotate(45deg); border-radius: 2px }
+    #cockpit-destino { padding-left: 4px; font-size: .94rem }
+    .cockpit-bottom .cockpit-row { flex-wrap: wrap }
+    .cockpit-bottom .linha-destino { flex-wrap: nowrap }
+    .cockpit-bottom .linha-destino button { flex: 0 0 auto }
+    .cockpit-label { display: block; font-size: .69rem; letter-spacing: .02em; color: var(--muted) }
+    .cockpit-metrics {
+      display: grid;
+      grid-template-columns: repeat(3,minmax(0,1fr));
+      margin: 8px 0;
+      border: 1px solid var(--edge);
+      border-radius: 17px;
+      background: #0c1319b3;
+    }
+    .cockpit-metrics div { padding: 8px 9px; min-width: 0 }
+    .cockpit-metrics div + div { border-left: 1px solid var(--edge) }
+    .cockpit-metrics strong {
+      display: block;
+      font-size: clamp(.96rem,4.4vw,1.4rem);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      letter-spacing: -.04em;
+    }
+    .cockpit-metrics div:first-child strong { color: var(--gold) }
+    .acoes-rota .cockpit-primary { flex: 1 }
+    .cockpit-controls {
+      position: fixed;
+      z-index: 1000;
+      right: max(var(--dir),calc((100vw - 580px) / 2));
+      bottom: var(--controles-base,98px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: end;
+    }
+    .cockpit-controls button { min-width: 46px; padding-inline: 9px }
+    #btn-vista[aria-pressed="true"] { color: var(--gold); border-color: #f9d34f8c }
+    #btn-recentralizar[data-localizado="true"] { font-size: 1.4rem }
+    #btn-recentralizar[data-seguir="false"] { color: var(--gold) }
+    .map-credit {
+      position: fixed;
+      right: var(--dir);
+      bottom: env(safe-area-inset-bottom);
+      z-index: 950;
+      padding: 1px 5px;
+      border-radius: 5px;
+      background: #101820df;
+      font-size: 10px;
+    }
+    .leaflet-container .leaflet-control-attribution { display: none }
+    body.perspectiva .map-credit { display: none }
+    #map3d .maplibregl-ctrl-bottom-right { right: var(--dir); bottom: env(safe-area-inset-bottom) }
+    #modal-busca, #painel-config, #painel-etapas {
+      z-index: 1100;
+      top: auto;
+      bottom: var(--base);
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+      width: min(calc(100% - var(--esq) - var(--dir)),580px);
+      max-height: calc(100dvh - var(--base) - var(--topo));
+      overflow: auto;
+      overscroll-behavior: contain;
+      padding: 0;
+      border-radius: var(--raio);
+    }
+    #modal-busca > div, #painel-config > div, #painel-etapas > div {
+      max-width: none;
+      max-height: none;
+      border-radius: var(--raio);
+      background: var(--surface);
+      border-color: var(--edge);
+    }
+    #modal-busca label, #painel-config label, #status-busca { font-size: .88rem }
+    #modal-busca input:not([type="range"]), #modal-busca select, #painel-config select {
+      font-size: 16px;
+      border: 1px solid var(--edge);
+      background: #212e37;
+    }
+    #modal-busca button, #painel-config button, #painel-etapas button { min-height: 44px; min-width: 44px }
+    #origem-detalhes { padding: 6px 0 }
+    #origem-detalhes summary { display: list-item; cursor: pointer; font-size: .875rem; padding-block: 9px; color: var(--muted) }
+    #origem-detalhes input { margin-top: 4px }
+    #status-busca:empty, #aviso-bateria:empty { display: none }
+    #fundo-painel { position: fixed; inset: 0; z-index: 1050; width: 100%; background: #04090bb0 }
+    #entrada-desktop { max-width: 28rem; margin: 20vh auto; padding: 24px }
+    #entrada-desktop h1 { color: var(--gold); font-size: 1.5rem }
+    html.somente-mobile body > :not(#entrada-desktop):not(script) { display: none !important }
+    @media (orientation: landscape) and (min-width: 540px) {
+      .cockpit { left: var(--esq); transform: none; width: clamp(246px,40vw,380px) }
+      .cockpit-bottom { max-height: min(52dvh,calc(100dvh - var(--topo-painel,150px) - var(--base) - 22px)) }
+      .cockpit-controls { right: var(--dir); bottom: calc(var(--base) + 23px) }
+      .cockpit-brand small { display: none }
+      #modal-busca, #painel-config, #painel-etapas { left: var(--esq); transform: none; width: min(460px,60vw) }
+    }
+    @media (orientation: landscape) and (max-height: 420px) {
+      .faixa-topo { padding-block: 2px }
+      #manobra-cockpit { padding-block: 4px; margin-top: 4px }
+      #icone-manobra { flex-basis: 44px; height: 44px }
+      #gps-status[data-estado="pronto"] { display: none }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important } }
   </style>
 </head>
 <body class="text-white select-none">
 
+  <section id="entrada-desktop" hidden><h1>GoTrix GPS</h1><p>Abra este app no celular ou tablet para usar o painel de navegação.</p></section>
   <header class="cockpit cockpit-top">
-    <div class="cockpit-panel">
-      <div class="cockpit-row">
-        <div class="cockpit-brand"><b>GO</b> GoTrix GPS</div>
-        <button class="cockpit-button" onclick="abrirPainel('bateria')" id="texto-bateria-vertical" aria-label="Ajustar bateria">100%</button>
-        <button class="cockpit-button" id="btn-menu-config" onclick="toggleMenuConfig()" aria-label="Configurações">⚙</button>
-      </div>
-      <div class="cockpit-row mt-2" id="busca-cockpit">
-        <button class="cockpit-button cockpit-search" onclick="abrirPainel('destino')">⌕ &nbsp; Para onde vamos?</button>
-      </div>
-      <div class="cockpit-row mt-2 hidden" id="manobra-cockpit">
-        <strong id="icone-manobra" class="text-3xl text-yellow-300" aria-hidden="true">↑</strong>
-        <div class="min-w-0 flex-1">
-          <p id="distancia-manobra" class="font-black"></p>
-          <p id="rua-manobra" class="truncate text-sm text-yellow-200"></p>
-        </div>
-      </div>
-      <p class="cockpit-status" id="gps-status" role="status">Solicitando sua localização…</p>
+    <div class="cockpit-panel cockpit-row faixa-topo">
+      <div class="cockpit-brand"><b aria-hidden="true">GO</b><span>GoTrix <small>GPS</small></span></div>
+      <button type="button" class="cockpit-button btn-bateria" onclick="abrirPainel('bateria')" aria-label="Ajustar a carga da bateria">
+        <span class="icone-bateria" aria-hidden="true"></span><span id="texto-bateria-vertical">100%</span>
+      </button>
+      <button type="button" class="cockpit-button btn-icone" id="btn-menu-config" onclick="toggleMenuConfig()" aria-label="Configurações">⚙</button>
     </div>
+    <div class="cockpit-panel cockpit-row hidden" id="manobra-cockpit">
+      <strong id="icone-manobra" aria-hidden="true">↑</strong>
+      <div class="min-w-0 flex-1">
+        <p id="distancia-manobra" class="font-black"></p>
+        <p id="rua-manobra" class="truncate text-sm"></p>
+      </div>
+    </div>
+    <p class="cockpit-status" id="gps-status" role="status">Solicitando sua localização…</p>
   </header>
   <div class="cockpit-controls">
-    <button class="cockpit-button" id="btn-recentralizar" onclick="recentralizarUsuario()" aria-label="Ativar GPS">Ativar GPS</button>
-    <button class="cockpit-button" id="btn-vista" onclick="alternarPerspectiva()" aria-pressed="false">3D</button>
-    <span id="badge-recentralizar" class="hidden"></span>
+    <button type="button" class="cockpit-button" id="btn-vista" onclick="alternarPerspectiva()" aria-pressed="false">3D</button>
+    <button type="button" class="cockpit-button" id="btn-recentralizar" onclick="recentralizarUsuario()" aria-label="Ativar GPS">Ativar GPS</button>
   </div>
+  <div class="cockpit cockpit-panel cockpit-bottom" id="busca-cockpit">
+    <button type="button" class="cockpit-button cockpit-primary cockpit-search" onclick="abrirPainel('destino')">
+      <span class="icone-busca" aria-hidden="true"></span>Para onde vamos?
+    </button>
+  </div>
+  <button type="button" id="fundo-painel" onclick="fecharPaineis()" aria-label="Fechar painel" hidden></button>
 
   <!-- MENU DE CONFIGURAÇÕES RECOLHÍVEL -->
   <div id="painel-config" class="hidden fixed top-20 right-4 left-4 z-30">
     <div class="max-w-md mx-auto bg-[#121212] p-4 rounded-2xl border border-[#e2b245]/40 shadow-2xl space-y-3.5 max-h-[75vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5">
         <div>
-          <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#e2b245]">Preferências do App</span>
           <h3 class="text-sm font-black text-white">Configurações</h3>
         </div>
         <button onclick="fecharMenuConfig()" class="text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-700 px-2.5 py-1 rounded-lg">
-          Recolher ⌃
+          Fechar
         </button>
       </div>
 
@@ -308,10 +471,13 @@
       </div>
 
       <div id="form-destino" class="space-y-2">
-        <label for="origem-input" class="cockpit-label">Origem</label>
-        <input id="origem-input" class="w-full bg-zinc-900 rounded-lg p-2" placeholder="Usar minha localização">
         <label for="destino-input" class="cockpit-label">Destino</label>
-        <input id="destino-input" class="w-full bg-zinc-900 rounded-lg p-2" placeholder="Endereço ou nome do local" onkeydown="if(event.key === 'Enter') buscarEndereco()">
+        <input id="destino-input" class="w-full bg-zinc-900 rounded-lg p-2" placeholder="Endereço ou nome do local" enterkeyhint="search" onkeydown="if(event.key === 'Enter') buscarEndereco()">
+        <details id="origem-detalhes">
+          <summary>Escolher ponto de partida</summary>
+          <label for="origem-input" class="cockpit-label">Origem</label>
+          <input id="origem-input" class="w-full bg-zinc-900 rounded-lg p-2" placeholder="Usar minha localização">
+        </details>
         <button class="cockpit-button cockpit-primary w-full" onclick="buscarEndereco()">Buscar endereços</button>
         <div id="escolhas" hidden class="space-y-2">
           <label for="origens">Origem encontrada</label><select id="origens" class="w-full bg-zinc-900 p-2"></select>
@@ -355,7 +521,6 @@
     <div class="max-w-md mx-auto bg-[#121212] rounded-2xl border border-[#e2b245]/40 shadow-[0_-10px_30px_rgba(0,0,0,0.9)] overflow-hidden">
       <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-[#0d0d0d]">
         <div>
-          <span class="text-[9px] font-extrabold uppercase tracking-widest text-[#e2b245]">Resumo do Trajeto</span>
           <h3 id="titulo-resumo-rota" class="text-sm font-black text-white">Ruas e conversões da rota</h3>
         </div>
         <button onclick="fecharResumoRota()" class="text-xs font-bold text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-700 px-2.5 py-1 rounded-lg">
@@ -380,9 +545,8 @@
     </div>
   </div>
 
-  <!-- BANNER PROMOCIONAL COMPACTO E FECHÁVEL -->
   <section id="cockpit-rota" class="cockpit cockpit-panel cockpit-bottom hidden" aria-label="Resumo da viagem">
-    <div class="cockpit-row">
+    <div class="cockpit-row linha-destino">
       <strong id="cockpit-destino" class="truncate min-w-0"></strong>
       <button id="btn-limpar-rota" class="cockpit-button" onclick="limparRota()">Encerrar</button>
     </div>
@@ -397,7 +561,7 @@
       <div><span class="cockpit-label">Carga na chegada</span><strong id="badge-relevo">—</strong></div>
     </div>
     <p id="aviso-bateria" class="text-xs text-yellow-200" role="status"></p>
-    <div class="cockpit-row mt-2">
+    <div class="cockpit-row acoes-rota mt-2">
       <button class="cockpit-button" onclick="toggleResumoRota()">Etapas</button>
       <button id="btn-iniciar" class="cockpit-button cockpit-primary" onclick="iniciarNavegacao()">Iniciar navegação</button>
     </div>
@@ -408,7 +572,7 @@
     <div id="map3d" aria-label="Mapa tridimensional"></div>
   </div>
 
-  <script>
+  <script id="codigo-aplicativo" type="text/plain">
     let posAtual = [-25.5347, -49.2064]; 
     let posAnterior = null;
     let gpsPronto = false;
@@ -437,7 +601,9 @@
     }
 
     function definirStatus(mensagem) {
-      document.getElementById('gps-status').textContent = mensagem;
+      const status = document.getElementById('gps-status');
+      status.textContent = mensagem;
+      status.dataset.estado = gpsPronto && ['GPS disponível','Navegação em andamento','Trajeto atualizado'].includes(mensagem) ? 'pronto' : '';
     }
 
     let anguloAtual = 0;
@@ -547,6 +713,7 @@
       document.getElementById('modal-busca').classList.add('hidden');
       const painel = document.getElementById('painel-config');
       painel.classList.toggle('hidden');
+      atualizarFundoPainel();
       if (!painel.classList.contains('hidden')) {
         const estiloSelect = document.getElementById('select-estilo-fala');
         if (estiloSelect) estiloSelect.value = estiloFalaSelecionado;
@@ -560,6 +727,7 @@
 
     function fecharMenuConfig() {
       document.getElementById('painel-config').classList.add('hidden');
+      atualizarFundoPainel();
     }
 
     function getChaveVoz(v) {
@@ -771,6 +939,7 @@
       fecharMenuConfig();
       const painel = document.getElementById('painel-etapas');
       painel.classList.toggle('hidden');
+      atualizarFundoPainel();
       if (!painel.classList.contains('hidden')) {
         renderizarListaEtapas();
       }
@@ -778,6 +947,7 @@
 
     function fecharResumoRota() {
       document.getElementById('painel-etapas').classList.add('hidden');
+      atualizarFundoPainel();
     }
 
     function descreverManobra(step) {
@@ -810,13 +980,11 @@
 
     function focarEtapaNoMapa(lat, lng) {
       seguirUsuario = false;
-      const btn = document.getElementById('btn-recentralizar');
-      const badge = document.getElementById('badge-recentralizar');
-      btn.classList.add('ring-4', 'ring-[#e2b245]/60', 'animate-pulse');
-      badge.classList.remove('hidden');
+      document.getElementById('btn-recentralizar').dataset.seguir = 'false';
 
       fecharResumoRota();
       map.flyTo([lat, lng], 18, { duration: 0.5 });
+      if (perspectiva) cena3d.easeTo({center:[lng,lat],zoom:17,duration:400});
     }
 
     function renderizarListaEtapas() {
@@ -948,18 +1116,12 @@
 
     map.on('dragstart', () => {
       seguirUsuario = false;
-      const btn = document.getElementById('btn-recentralizar');
-      const badge = document.getElementById('badge-recentralizar');
-      btn.classList.add('ring-4', 'ring-[#e2b245]/60', 'animate-pulse');
-      badge.classList.remove('hidden');
+      document.getElementById('btn-recentralizar').dataset.seguir = 'false';
     });
 
     function recentralizarUsuario() {
       seguirUsuario = true;
-      const btn = document.getElementById('btn-recentralizar');
-      const badge = document.getElementById('badge-recentralizar');
-      btn.classList.remove('ring-4', 'ring-[#e2b245]/60', 'animate-pulse');
-      badge.classList.add('hidden');
+      document.getElementById('btn-recentralizar').dataset.seguir = 'true';
 
       if (!gpsPronto) {
         iniciarGPS();
@@ -998,12 +1160,9 @@
       if (rumoGraus === null || isNaN(rumoGraus)) return;
       anguloAtual = rumoGraus;
 
-      const mapEl = document.getElementById('map');
       const scooterEl = document.getElementById('scooter-cursor');
 
-      const bearing = emNavegacao && perspectiva && modoBussolaAtivo ? -anguloAtual : 0;
-      mapEl.style.setProperty('--bearing', bearing + 'deg');
-      if (scooterEl) scooterEl.style.transform = `rotate(${anguloAtual + bearing}deg)`;
+      if (scooterEl) scooterEl.style.transform = `rotate(${anguloAtual}deg)`;
     }
 
     window.addEventListener('deviceorientationabsolute', handleOrientation, true);
@@ -1028,6 +1187,8 @@
       fecharResumoRota();
       fecharMenuConfig();
       document.getElementById('modal-busca').classList.remove('hidden');
+      document.getElementById('origem-detalhes').open = Boolean(document.getElementById('origem-input').value) || (!gpsPronto && !posicaoAproximada);
+      atualizarFundoPainel();
       document.getElementById('titulo-busca').textContent = tipo === 'bateria' ? 'Bateria e autonomia' : 'Destino e origem';
       document.getElementById('form-destino').classList.toggle('hidden', tipo !== 'destino');
       document.getElementById('form-bateria').classList.toggle('hidden', tipo !== 'bateria');
@@ -1036,8 +1197,19 @@
       document.getElementById(tipo === 'destino' ? 'destino-input' : 'alcance-input').focus();
     }
 
+    const paineis = ['modal-busca','painel-config','painel-etapas'];
+    function atualizarFundoPainel() {
+      document.getElementById('fundo-painel').hidden = paineis.every(id => document.getElementById(id).classList.contains('hidden'));
+    }
+
+    function fecharPaineis() {
+      for (const id of paineis) document.getElementById(id).classList.add('hidden');
+      atualizarFundoPainel();
+    }
+
     function fecharBusca() {
       document.getElementById('modal-busca').classList.add('hidden');
+      atualizarFundoPainel();
     }
 
     function atualizarVisualTemaMapa() {
@@ -1062,38 +1234,11 @@
       salvarPreferencias();
     }
 
-    const iconeScooterWaze = L.divIcon({
-      className: 'custom-scooter-icon',
-      html: `
-        <div id="scooter-cursor" class="scooter-wrapper" style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;">
-          <svg width="56" height="56" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="farolGrad" x1="32" y1="2" x2="32" y2="22" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#fde047" stop-opacity="0"/>
-                <stop offset="100%" stop-color="#e2b245" stop-opacity="0.55"/>
-              </linearGradient>
-              <filter id="sombraScooter" x="0" y="0" width="64" height="64" filterUnits="userSpaceOnUse">
-                <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.85"/>
-              </filter>
-            </defs>
-            <circle cx="32" cy="34" r="22" fill="#e2b245" fill-opacity="0.14" stroke="#e2b245" stroke-opacity="0.35" stroke-width="1"/>
-            <path d="M18 4 L46 4 L37 22 L27 22 Z" fill="url(#farolGrad)"/>
-            <g filter="url(#sombraScooter)">
-              <rect x="29.5" y="13" width="5" height="9" rx="2.5" fill="#18181b" stroke="#e2b245" stroke-width="1"/>
-              <rect x="17" y="21.5" width="30" height="3.2" rx="1.6" fill="#e2b245"/>
-              <circle cx="16.5" cy="21" r="2.2" fill="#111111" stroke="#e2b245" stroke-width="1.2"/>
-              <circle cx="47.5" cy="21" r="2.2" fill="#111111" stroke="#e2b245" stroke-width="1.2"/>
-              <ellipse cx="32" cy="19.5" rx="3.2" ry="1.8" fill="#fef08a"/>
-              <rect x="24" y="22" width="16" height="25" rx="7" fill="#121212" stroke="#e2b245" stroke-width="2"/>
-              <rect x="27" y="26" width="10" height="9" rx="2" fill="#27272a"/>
-              <rect x="26" y="36" width="12" height="10" rx="4" fill="#e2b245"/>
-              <rect x="28" y="46.5" width="8" height="2" rx="1" fill="#ef4444"/>
-            </g>
-          </svg>
-        </div>
-      `,
-      iconSize: [56, 56],
-      iconAnchor: [28, 28]
+    const iconeVeiculo = L.divIcon({
+      className: 'cursor-navegacao',
+      html: '<div id="scooter-cursor" class="scooter-wrapper" aria-hidden="true"></div>',
+      iconSize: [34,42],
+      iconAnchor: [17,21]
     });
 
     const iconeDestino = L.divIcon({
@@ -1119,7 +1264,7 @@
       return el.innerHTML;
     }
 
-    let cena3d, seta3d, biblioteca3d, rotaExibida;
+    let cena3d, seta3d, biblioteca3d, cenaCarregando, rotaExibida;
     let pedidoVista = 0;
     const vazio3d = {type:'FeatureCollection',features:[]};
     function carregarMotor3d() {
@@ -1148,8 +1293,75 @@
         seta3d = new maplibregl.Marker({element:el,rotationAlignment:'map'}).setLngLat(centro).addTo(cena3d);
       }
       seta3d.setLngLat(centro).setRotation(anguloAtual);
-      if (mover && seguirUsuario) cena3d.easeTo({center:centro,bearing:modoBussolaAtivo ? anguloAtual : 0,duration:350});
+      if (mover && seguirUsuario) {
+        cena3d.easeTo({center:centro,bearing:modoBussolaAtivo ? anguloAtual : 0,padding:enquadramento3d(),duration:320});
+      }
     }
+    function enquadramento3d() {
+      if (!emNavegacao) return {top:0,bottom:0,left:0,right:0};
+      const largura = window.innerWidth;
+      const cabecalho = document.querySelector('.cockpit-top').getBoundingClientRect();
+      const dock = document.getElementById('cockpit-rota').getBoundingClientRect();
+      if (matchMedia('(orientation: landscape) and (min-width: 540px)').matches) {
+        return {top:Math.round(window.innerHeight * .23),bottom:0,left:Math.min(dock.right + 10,largura * .55),right:0};
+      }
+      return {
+        top:Math.min(window.innerHeight * .54, Math.max(cabecalho.bottom,dock.height + 78)),
+        bottom:Math.min(window.innerHeight * .32,window.innerHeight - dock.top),
+        left:0,right:0
+      };
+    }
+
+    async function inicializarCena() {
+      const motor = await carregarMotor3d();
+      const centro = map.getCenter();
+      const cena = new motor.Map({
+        container:'map3d',style:'https://tiles.openfreemap.org/styles/liberty',
+        center:[centro.lng,centro.lat],zoom:16.5,pitch:50,maxPitch:65,attributionControl:true
+      });
+      try {
+        await new Promise((resolve,reject) => {
+          const prazo = setTimeout(() => reject(Error('Mapa vetorial indisponível')),15000);
+          cena.once('load', () => { clearTimeout(prazo); resolve(); });
+        });
+        const camadas = cena.getStyle().layers;
+        const edificios = camadas.filter(layer => layer.type === 'fill-extrusion');
+        if (edificios.length) {
+          for (const layer of edificios) cena.setPaintProperty(layer.id,'fill-extrusion-color','#8096a3');
+        } else {
+          const base = camadas.find(layer => layer['source-layer'] === 'building');
+          if (base) cena.addLayer({
+            id:'gotrix-edificios',type:'fill-extrusion',source:base.source,'source-layer':'building',minzoom:14,
+            paint:{
+              'fill-extrusion-color':'#8096a3',
+              'fill-extrusion-height':['to-number',['get','render_height'],5],
+              'fill-extrusion-base':['to-number',['get','render_min_height'],0],
+              'fill-extrusion-opacity':0.88
+            }
+          });
+        }
+        cena.addSource('gotrix-rota',{type:'geojson',data:vazio3d});
+        for (const [id,paint] of [
+          ['gotrix-halo',{'line-color':'#ffd34f','line-width':17,'line-opacity':.27,'line-blur':5}],
+          ['gotrix-borda',{'line-color':'#25221c','line-width':10}],
+          ['gotrix-trajeto',{'line-color':'#f9d34f','line-width':6}]
+        ]) {
+          cena.addLayer({id,type:'line',source:'gotrix-rota',layout:{'line-join':'round','line-cap':'round'},paint});
+        }
+        cena.on('dragstart', () => {
+          seguirUsuario = false;
+          document.getElementById('btn-recentralizar').dataset.seguir = 'false';
+        });
+        cena.on('click', e => {
+          if (!emNavegacao) map.fire('click',{latlng:L.latLng(e.lngLat.lat,e.lngLat.lng)});
+        });
+        return cena;
+      } catch (erro) {
+        cena.remove();
+        throw erro;
+      }
+    }
+
     async function aplicarPerspectiva(ativa) {
       const pedido = ++pedidoVista;
       const botao = document.getElementById('btn-vista');
@@ -1164,42 +1376,26 @@
       }
       botao.textContent = 'Abrindo 3D…';
       try {
-        const motor = await carregarMotor3d();
+        cenaCarregando ??= inicializarCena().catch(erro => {
+          cenaCarregando = undefined;
+          throw erro;
+        });
+        const cena = await cenaCarregando;
         if (pedido !== pedidoVista) return;
-        if (!cena3d) {
-          const centro = map.getCenter();
-          cena3d = new motor.Map({container:'map3d',style:'https://tiles.openfreemap.org/styles/liberty',center:[centro.lng,centro.lat],zoom:16.5,pitch:48,maxPitch:65,attributionControl:true});
-          const cena = cena3d;
-          cena.on('dragstart', () => { seguirUsuario = false; });
-          cena.on('click', e => { if (!emNavegacao) map.fire('click',{latlng:L.latLng(e.lngLat.lat,e.lngLat.lng)}); });
-          await new Promise((resolve,reject) => {
-            const prazo = setTimeout(() => reject(Error('Mapa vetorial indisponível')),15000);
-            cena.once('load', () => {clearTimeout(prazo);resolve();});
-          });
-          const edificios = cena.getStyle().layers.filter(layer => layer.type === 'fill-extrusion');
-          if (!edificios.length) {
-            const base = cena.getStyle().layers.find(layer => layer['source-layer'] === 'building');
-            if (base) cena.addLayer({id:'gotrix-edificios',type:'fill-extrusion',source:base.source,'source-layer':'building',minzoom:14,
-              paint:{'fill-extrusion-color':'#8799a5','fill-extrusion-height':['to-number',['get','render_height'],5],
-                'fill-extrusion-base':['to-number',['get','render_min_height'],0],'fill-extrusion-opacity':0.88}});
-          } else {
-            for (const layer of edificios) cena.setPaintProperty(layer.id,'fill-extrusion-color','#93a4af');
-          }
-          cena.addSource('gotrix-rota',{type:'geojson',data:vazio3d});
-          cena.addLayer({id:'gotrix-borda',type:'line',source:'gotrix-rota',paint:{'line-color':'#292116','line-width':10}});
-          cena.addLayer({id:'gotrix-trajeto',type:'line',source:'gotrix-rota',paint:{'line-color':'#ffca33','line-width':6}});
-        }
-        if (pedido !== pedidoVista) return;
-        const c = map.getCenter();
-        cena3d.jumpTo({center:gpsPronto && seguirUsuario ? [posAtual[1],posAtual[0]] : [c.lng,c.lat],zoom:16.5,pitch:48,bearing:modoBussolaAtivo ? anguloAtual : 0});
+        cena3d = cena;
+        const centro = map.getCenter();
+        cena.jumpTo({
+          center:gpsPronto && seguirUsuario ? [posAtual[1],posAtual[0]] : [centro.lng,centro.lat],
+          zoom:emNavegacao ? 17 : 16.5,pitch:50,bearing:modoBussolaAtivo ? anguloAtual : 0,
+          padding:enquadramento3d()
+        });
         perspectiva = true;
         document.body.classList.add('perspectiva');
-        cena3d.resize();
+        cena.resize();
         sincronizarCena(false);
         botao.textContent = '2D';
         botao.setAttribute('aria-pressed','true');
       } catch {
-        cena3d?.remove(); cena3d = seta3d = undefined; rotaExibida = undefined;
         if (pedido !== pedidoVista) return;
         aplicarPerspectiva(false);
         definirStatus('3D indisponível neste dispositivo ou conexão. Mapa 2D ativo.');
@@ -1256,6 +1452,7 @@
         velocidadeAtual = null;
         const botao = document.getElementById('btn-recentralizar');
         botao.textContent = 'Ativar GPS';
+        botao.dataset.localizado = 'false';
         botao.setAttribute('aria-label', 'Ativar GPS');
         const mensagens = {
           1: 'Acesso bloqueado. Permita a localização nas permissões do site e do aparelho e toque em Ativar GPS.',
@@ -1277,13 +1474,14 @@
         }
         const botao = document.getElementById('btn-recentralizar');
         botao.textContent = '◎';
+        botao.dataset.localizado = 'true';
         botao.setAttribute('aria-label', 'Recentralizar mapa');
         const primeira = !gpsPronto;
         const novaPosicao = [latitude, longitude];
         gpsPronto = true;
         posAtual = novaPosicao;
         velocidadeAtual = Number.isFinite(speed) && speed >= 0 ? Math.round(speed * 3.6) : null;
-        if (!marcadorUsuario) marcadorUsuario = L.marker(posAtual, { icon: iconeScooterWaze, zIndexOffset: 1000 }).addTo(map);
+        if (!marcadorUsuario) marcadorUsuario = L.marker(posAtual, { icon: iconeVeiculo, zIndexOffset: 1000 }).addTo(map);
         else marcadorUsuario.setLatLng(posAtual);
         if (velocidadeAtual > 2 && Number.isFinite(heading)) aplicarOrientacaoMapa(heading);
         else if (posAnterior && velocidadeAtual > 2) aplicarOrientacaoMapa(calcularDirecao(...posAnterior, ...posAtual));
@@ -1499,8 +1697,12 @@
       ultimaManobra = -1;
       pontosForaDaRota = 0;
       linhaRota?.remove();
-      linhaRota = L.geoJSON(rota.geometry, { style: { color: '#ffd65c', weight: 6, opacity: 0.98, className: 'rota-luz', interactive: false } }).addTo(map);
+      linhaRota = L.layerGroup([
+        L.geoJSON(rota.geometry,{style:{color:'#202329',weight:11,interactive:false}}),
+        L.geoJSON(rota.geometry,{style:{color:'#f9d34f',weight:6,className:'rota-luz',interactive:false}})
+      ]).addTo(map);
       document.getElementById('cockpit-rota').classList.remove('hidden');
+      document.getElementById('busca-cockpit').classList.add('hidden');
       document.getElementById('opcoes-rota').classList.toggle('hidden', emNavegacao);
       document.getElementById('btn-iniciar').classList.toggle('hidden', emNavegacao);
       document.getElementById('btn-limpar-rota').textContent = emNavegacao ? 'Encerrar' : 'Limpar';
@@ -1516,12 +1718,15 @@
       campo('btn-iniciar').textContent = destinoRota?.origemManual ? 'Iniciar daqui' : 'Iniciar navegação';
       if (!emNavegacao) {
         aplicarPerspectiva(false);
-        // Leaflet's viewport extends outside the physical screen in cockpit mode.
-        const larguraExtra = (map.getSize().x - window.innerWidth) / 2;
-        const alturaExtra = (map.getSize().y - window.innerHeight) / 2;
-        map.fitBounds(linhaRota.getBounds(), {
-          paddingTopLeft: [larguraExtra + 25, alturaExtra + 150],
-          paddingBottomRight: [larguraExtra + 25, alturaExtra + Math.min(245, window.innerHeight * .38)],
+        const painel = document.getElementById('cockpit-rota').getBoundingClientRect();
+        const cabecalho = document.querySelector('.cockpit-top').getBoundingClientRect();
+        const lateral = matchMedia('(orientation: landscape) and (min-width: 540px)').matches;
+        const topo = lateral ? 18 : cabecalho.bottom + 12;
+        const base = lateral ? 18 : window.innerHeight - painel.top + 12;
+        const escala = Math.min(1,Math.max(0,window.innerHeight - 78)/(topo + base));
+        map.fitBounds(L.geoJSON(rota.geometry).getBounds(), {
+          paddingTopLeft:[lateral ? painel.right + 18 : 20,topo * escala],
+          paddingBottomRight:[lateral ? 68 : 20,base * escala],
           maxZoom: 17,
         });
       }
@@ -1640,7 +1845,45 @@
     }
 
     atualizarIndicadorBateriaVertical();
+    function ajustarTela() {
+      const cabecalho = document.querySelector('.cockpit-top').getBoundingClientRect();
+      const rota = document.getElementById('cockpit-rota');
+      const busca = document.getElementById('busca-cockpit');
+      const dock = rota.classList.contains('hidden') ? busca : rota;
+      const top = dock.getBoundingClientRect().top;
+      const base = Math.max(0,window.innerHeight - top) + 10;
+      const estilo = document.documentElement.style;
+      estilo.setProperty('--controles-base', Math.min(base,window.innerHeight * .47) + 'px');
+      estilo.setProperty('--topo-painel', (cabecalho.bottom + 8) + 'px');
+      map.invalidateSize({pan:false});
+      if (perspectiva) {
+        cena3d.resize();
+        sincronizarCena();
+      }
+    }
+    if (window.ResizeObserver) {
+      const observadorTela = new ResizeObserver(ajustarTela);
+      for (const seletor of ['.cockpit-top','#cockpit-rota','#busca-cockpit','#map-viewport']) {
+        observadorTela.observe(document.querySelector(seletor));
+      }
+    }
+    window.addEventListener('resize',ajustarTela);
+    ajustarTela();
     iniciarGPS();
+  </script>
+  <script>
+    const agente = navigator.userAgent;
+    const celularOuTablet = /Android|iPhone|iPad|iPod|Mobile|Tablet|Silk/i.test(agente)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+      || (navigator.maxTouchPoints > 0 && matchMedia('(pointer: coarse)').matches);
+    if (celularOuTablet) {
+      const aplicativo = document.createElement('script');
+      aplicativo.textContent = document.getElementById('codigo-aplicativo').textContent;
+      document.body.append(aplicativo);
+    } else {
+      document.documentElement.classList.add('somente-mobile');
+      document.getElementById('entrada-desktop').hidden = false;
+    }
   </script>
 </body>
 </html>
