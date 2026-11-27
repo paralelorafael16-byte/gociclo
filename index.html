@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>GoTrix - GPS para Mobilidade Urbana</title>
   
   <!-- Tailwind CSS -->
@@ -58,82 +58,74 @@
       background: #e2b245;
       border-radius: 4px;
     }
+   
+    :root { --gold: #f6ca55; --panel: rgba(16,18,20,.94); }
+    body { color: #f7f7f5; }
+    .cockpit { position: fixed; z-index: 1000; left: 50%; transform: translateX(-50%); width: min(94vw, 540px); }
+    .cockpit-top { top: max(14px, env(safe-area-inset-top)); }
+    .cockpit-panel { background: linear-gradient(155deg,#242629,var(--panel) 48%); border: 1px solid #55503d; border-radius: 19px; box-shadow: inset 0 1px 0 #ffffff20, 0 14px 40px #0009; }
+    .cockpit-brand { display: flex; align-items: center; gap: 9px; font-weight: 900; letter-spacing: .06em; }
+    .cockpit-brand b { background: var(--gold); color: #101010; padding: 4px 10px; border-radius: 8px; }
+    .cockpit-top .cockpit-panel { padding: 12px; }
+    .cockpit-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+    .cockpit-button { min-height: 43px; border: 1px solid #ffffff22; padding: 0 12px; background: #28292b; border-radius: 11px; font-weight: 700; font-size: .82rem; color: white; }
+    .cockpit-primary { background: var(--gold); color: #181408; border-color: var(--gold); }
+    .cockpit-search { flex: 1; text-align: left; }
+    .cockpit-label { font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: #c0c2c6; }
+    .cockpit-status { min-height: 1.2em; margin-top: 8px; color: #e0ded5; font-size: .74rem; }
+    .cockpit-bottom { bottom: max(27px, calc(env(safe-area-inset-bottom) + 16px)); padding: 13px; }
+    .cockpit-bottom .cockpit-row { flex-wrap: wrap; }
+    .cockpit-metrics { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; margin: 10px 0; }
+    .cockpit-metrics div { padding: 8px; border: 1px solid #ffffff17; border-radius: 10px; background: #10111399; }
+    .cockpit-metrics strong { display: block; font-size: clamp(.93rem,4vw,1.35rem); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .cockpit-controls { position: fixed; z-index: 900; right: max(12px, calc((100vw - 540px)/2)); top: 158px; display: grid; gap: 8px; }
+    .cockpit-controls button { box-shadow: 0 5px 15px #0009; }
+    #map-viewport { perspective: 930px; }
+    #map { transform: translate(-50%, -50%) rotateX(var(--pitch, 0deg)) rotateZ(var(--bearing, 0deg)) scale(var(--map-scale, 1)); }
+    body.perspectiva #map { --pitch: 46deg; --map-scale: 1.42; }
+    body.perspectiva #map-viewport { pointer-events: none; }
+    body.perspectiva::after { content: ''; position: fixed; z-index: 2; inset: 0; pointer-events: none; background: linear-gradient(180deg,#0b0d11bb,transparent 42%,transparent 67%,#0b0d11aa); }
+    .cockpit-panel::before { content: ''; pointer-events: none; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(115deg,#ffe59e19,transparent 22%,transparent 80%,#ffe59e0b); }
+    .cockpit-top .cockpit-panel { position: relative; }
+    .cockpit-brand b { box-shadow: inset 0 1px 1px #fff9, 0 0 12px #f6ca5544; }
+    body.perspectiva .cockpit-metrics div { background: linear-gradient(155deg,#242520,#101113 62%); border-top-color: #f6ca5577; }
+    body.perspectiva #icone-manobra { text-shadow: 0 0 18px #f6ca5570; }
+    .rota-luz { filter: drop-shadow(0 0 5px #ffca44); }
+    .leaflet-container .leaflet-control-attribution { position: fixed; display: none; }
+    .map-credit { position: fixed; bottom: 0; right: 0; z-index: 950; color: white; background: #181818; padding: 2px 7px; font-size: 10px; }
+    #modal-busca, #painel-config, #painel-etapas { z-index: 1100; }
+    #modal-busca { max-height: calc(100dvh - 92px); overflow: auto; }
+    #painel-etapas { bottom: 25px; }
+    .hidden { display: none !important; }
+    @media(prefers-reduced-motion: reduce) { #map, .scooter-wrapper { transition: none; } }
   </style>
 </head>
 <body class="text-white select-none">
 
-  <!-- 1. BARRA SUPERIOR DE MANOBRA -->
-  <header class="fixed top-0 left-0 right-0 z-20 bg-[#0a0a0a] border-b border-[#e2b245]/30 px-4 py-3.5 shadow-[0_8px_24px_rgba(0,0,0,0.85)]">
-    <div class="max-w-md mx-auto flex items-center gap-3.5">
-      <div id="icone-manobra" class="w-11 h-11 flex items-center justify-center shrink-0 text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 18V9a4 4 0 0 1 4-4h6" />
-          <polyline points="15 1 19 5 15 9" />
-        </svg>
+  <header class="cockpit cockpit-top">
+    <div class="cockpit-panel">
+      <div class="cockpit-row">
+        <div class="cockpit-brand"><b>GO</b> GoTrix GPS</div>
+        <button class="cockpit-button" onclick="abrirPainel('bateria')" id="texto-bateria-vertical" aria-label="Ajustar bateria">100%</button>
+        <button class="cockpit-button" id="btn-menu-config" onclick="toggleMenuConfig()" aria-label="Configurações">⚙</button>
       </div>
-
-      <div class="min-w-0 flex-1">
-        <div class="flex items-center justify-between gap-2">
-          <p id="distancia-manobra" class="text-2xl font-black tracking-tight text-white leading-none">
-            Pronto
-          </p>
-          <div class="flex items-center gap-1.5">
-            <button id="btn-limpar-rota" onclick="limparRota()" class="hidden text-[10px] font-extrabold uppercase bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/40 px-2 py-0.5 rounded transition">
-              Limpar
-            </button>
-            <span class="text-[10px] font-black italic tracking-wider text-[#e2b245] border border-[#e2b245]/40 px-2 py-0.5 rounded bg-[#e2b245]/10">
-              GoTrix GPS
-            </span>
-          </div>
+      <div class="cockpit-row mt-2" id="busca-cockpit">
+        <button class="cockpit-button cockpit-search" onclick="abrirPainel('destino')">⌕ &nbsp; Para onde vamos?</button>
+      </div>
+      <div class="cockpit-row mt-2 hidden" id="manobra-cockpit">
+        <strong id="icone-manobra" class="text-3xl text-yellow-300" aria-hidden="true">↑</strong>
+        <div class="min-w-0 flex-1">
+          <p id="distancia-manobra" class="font-black"></p>
+          <p id="rua-manobra" class="truncate text-sm text-yellow-200"></p>
         </div>
-        <p id="rua-manobra" class="text-sm font-semibold text-[#e2b245] truncate mt-1">
-          Toque na lupa abaixo ou no mapa
-        </p>
       </div>
+      <p class="cockpit-status" id="gps-status" role="status">Obtendo localização…</p>
     </div>
   </header>
-
-  <!-- INDICADOR VERTICAL DE BATERIA (LATERAL ESQUERDA) -->
-  <div onclick="toggleBusca()" title="Ajustar carga atual e voltagem da bateria" class="fixed top-24 left-4 z-20 flex flex-col items-center gap-1 cursor-pointer active:scale-95 transition">
-    <div class="w-4 h-1.5 rounded-t bg-zinc-400"></div>
-
-    <div class="relative w-7 h-28 rounded-xl bg-[#121212] border-2 border-[#e2b245]/80 shadow-[0_6px_18px_rgba(0,0,0,0.85)] p-0.5 flex items-end overflow-hidden">
-      <div id="barra-bateria-chegada" class="hidden absolute left-0.5 right-0.5 bottom-0.5 rounded-b-lg border-t-2 border-dashed border-emerald-300/80 pointer-events-none transition-all duration-300" style="height: 0%;"></div>
-      <div id="barra-bateria-vertical" class="w-full rounded-b-lg bg-[#e2b245] transition-all duration-300" style="height: 100%;"></div>
-    </div>
-
-    <span id="texto-bateria-vertical" class="text-[10px] font-black text-white bg-[#0a0a0a] px-1.5 py-0.5 rounded border border-zinc-700 leading-none">
-      100%
-    </span>
-    <span id="subtexto-bateria-vertical" class="text-[8px] font-bold text-[#e2b245] leading-none">
-      48V
-    </span>
-  </div>
-
-  <!-- CONTROLES FLUTUANTES SUPERIORES DIREITOS -->
-  <div class="fixed top-24 right-4 z-20 flex flex-col items-end gap-2.5">
-    <!-- Botão discreto para abrir/recolher menu de configurações -->
-    <button id="btn-menu-config" onclick="toggleMenuConfig()" title="Configurações" class="w-10 h-10 rounded-full bg-[#121212] hover:bg-[#181818] border border-zinc-700/90 hover:border-[#e2b245] shadow-[0_4px_14px_rgba(0,0,0,0.75)] flex items-center justify-center text-zinc-300 hover:text-[#e2b245] transition-all active:scale-95">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    </button>
-
-    <!-- Bússola -->
-    <div class="flex flex-col items-center">
-      <button id="btn-bussola" onclick="alternarModoBussola()" title="Orientar mapa pela direção" class="w-12 h-12 rounded-full bg-[#121212] border-2 border-[#e2b245] shadow-[0_6px_18px_rgba(0,0,0,0.85)] flex items-center justify-center transition-all active:scale-95">
-        <svg id="agulha-bussola" class="w-7 h-7 transition-transform duration-300" viewBox="0 0 32 32" fill="none">
-          <circle cx="16" cy="16" r="14" stroke="#3f3f46" stroke-width="1.2"/>
-          <polygon points="16,4 20,16 12,16" fill="#ef4444"/>
-          <polygon points="16,28 20,16 12,16" fill="#e2b245"/>
-          <circle cx="16" cy="16" r="2.2" fill="#0a0a0a" stroke="#ffffff" stroke-width="1"/>
-        </svg>
-      </button>
-      <span id="label-bussola" class="mt-1 text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#0a0a0a] text-[#e2b245] border border-[#e2b245]/30 shadow">
-        Bússola ON
-      </span>
-    </div>
+  <div class="cockpit-controls">
+    <button class="cockpit-button" id="btn-recentralizar" onclick="recentralizarUsuario()" aria-label="Recentralizar mapa">◎</button>
+    <button class="cockpit-button hidden" id="btn-vista" onclick="alternarPerspectiva()" aria-pressed="false">3D</button>
+    <span id="badge-recentralizar" class="hidden"></span>
   </div>
 
   <!-- MENU DE CONFIGURAÇÕES RECOLHÍVEL -->
@@ -184,6 +176,7 @@
 
       <!-- Liga/desliga voz, tela e tema -->
       <div class="pt-2 border-t border-zinc-800 space-y-2">
+        <button id="btn-bussola" class="cockpit-button w-full" onclick="alternarModoBussola()">Orientação · <span id="label-bussola">Acompanhar direção</span></button>
         <div class="flex items-center justify-between py-1">
           <div>
             <p class="text-xs font-bold text-white">Instruções por voz</p>
@@ -221,80 +214,42 @@
   <div id="modal-busca" class="hidden fixed inset-x-0 top-20 z-30 px-4">
     <div class="max-w-md mx-auto bg-[#121212] p-4 rounded-2xl border border-[#e2b245]/40 shadow-2xl space-y-3">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-bold uppercase tracking-wider text-[#e2b245]">Destino & Autonomia</span>
-        <button onclick="toggleBusca()" class="text-zinc-400 hover:text-white text-xs font-bold px-2 py-1">Fechar ✕</button>
+        <span id="titulo-busca" class="text-xs font-bold uppercase tracking-wider text-[#e2b245]">Destino e origem</span>
+        <button onclick="fecharBusca()" class="text-zinc-400 hover:text-white text-xs font-bold px-2 py-1">Fechar ✕</button>
       </div>
 
-      <div class="flex gap-2">
-        <input 
-          type="text" 
-          id="destino-input" 
-          placeholder="Digite o endereço ou local..." 
-          class="w-full min-w-0 bg-[#1a1a1a] text-sm text-white placeholder-zinc-500 px-3.5 py-2.5 rounded-xl border border-zinc-700 focus:outline-none focus:border-[#e2b245]"
-          onkeypress="if(event.key === 'Enter') buscarEndereco()"
-        />
-        <button 
-          onclick="buscarEndereco()" 
-          class="bg-gradient-to-r from-yellow-400 to-[#e2b245] text-black font-extrabold px-5 py-2.5 rounded-xl text-sm shrink-0 whitespace-nowrap">
-          Ir
-        </button>
+      <div id="form-destino" class="space-y-2">
+        <label for="origem-input" class="cockpit-label">Origem</label>
+        <input id="origem-input" class="w-full bg-zinc-900 rounded-lg p-2" placeholder="Usar minha localização">
+        <label for="destino-input" class="cockpit-label">Destino</label>
+        <input id="destino-input" class="w-full bg-zinc-900 rounded-lg p-2" placeholder="Endereço ou nome do local" onkeydown="if(event.key === 'Enter') buscarEndereco()">
+        <button class="cockpit-button cockpit-primary w-full" onclick="buscarEndereco()">Ver trajeto</button>
       </div>
-
-      <!-- MODO DE PILOTAGEM AJUSTADO -->
-      <div class="pt-2.5 border-t border-zinc-800 space-y-2">
-        <div class="flex items-center justify-between">
-          <span class="text-[11px] text-zinc-400 font-semibold whitespace-nowrap">Modo de pilotagem:</span>
-          <span class="text-[10px] font-bold text-[#e2b245]">Velocidade média</span>
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <button id="btn-modo-eco" onclick="definirModoPilotagem('eco')" class="py-2 px-2.5 rounded-xl text-xs font-extrabold bg-[#e2b245] text-black flex items-center justify-center gap-1 whitespace-nowrap transition">
-            <span>Eco (18 km/h)</span>
-            <span>⚡</span>
-          </button>
-          <button id="btn-modo-normal" onclick="definirModoPilotagem('normal')" class="py-2 px-2.5 rounded-xl text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700 flex items-center justify-center gap-1 whitespace-nowrap transition">
-            <span>Normal (26 km/h)</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="pt-2.5 border-t border-zinc-800 flex items-center justify-between gap-2">
-        <span class="text-[11px] text-zinc-400 font-semibold whitespace-nowrap">Voltagem da bateria:</span>
-        <div class="flex items-center gap-1.5">
-          <div class="flex items-center bg-[#1a1a1a] border border-zinc-700 focus-within:border-[#e2b245] rounded-lg px-2.5 py-1">
-            <input 
-              type="number" 
-              id="input-voltagem" 
-              min="12" 
-              max="120" 
-              step="1" 
-              value="48" 
-              oninput="atualizarVoltagemDigitada(this.value)"
-              class="w-12 bg-transparent text-right text-xs font-black text-white focus:outline-none"
-            />
-            <span class="text-xs font-black text-[#e2b245] ml-0.5 select-none">V</span>
-          </div>
-          <button onclick="setarVoltagemRapida(36)" class="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-bold text-zinc-300 border border-zinc-700">36V</button>
-          <button onclick="setarVoltagemRapida(48)" class="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-bold text-zinc-300 border border-zinc-700">48V</button>
-          <button onclick="setarVoltagemRapida(60)" class="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-bold text-zinc-300 border border-zinc-700">60V</button>
-          <button onclick="setarVoltagemRapida(72)" class="px-2 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-bold text-zinc-300 border border-zinc-700">72V</button>
-        </div>
-      </div>
-
+      <div id="form-bateria" class="space-y-3">
+        <label for="veiculo-input" class="cockpit-label block">Veículo</label>
+        <select id="veiculo-input" class="w-full bg-zinc-900 rounded-lg p-2" onchange="trocarVeiculo(this.value)">
+          <option value="bike">Bike elétrica</option>
+          <option value="scooter">Scooter elétrica</option>
+        </select>
+        <p id="nota-veiculo" class="text-xs text-zinc-300 hidden">Use o perfil ciclável apenas onde sua scooter tiver acesso permitido.</p>
+        <label for="alcance-input" class="cockpit-label block">Autonomia real com 100% de carga</label>
+        <input id="alcance-input" type="number" min="1" max="500" class="w-full bg-zinc-900 rounded-lg p-2" placeholder="km" oninput="atualizarAlcance(this.value)">
       <div class="pt-2.5 border-t border-zinc-800">
         <div class="flex items-center justify-between text-[11px] mb-1.5">
-          <span class="text-zinc-400 font-semibold">Carga atual da bateria:</span>
+          <label for="input-carga-atual" class="text-zinc-400 font-semibold">Carga atual da bateria</label>
           <span id="label-carga-atual" class="font-black text-[#e2b245]">100%</span>
         </div>
         <input 
           type="range" 
           id="input-carga-atual" 
-          min="10" 
+          min="0" 
           max="100" 
-          step="5" 
+          step="1" 
           value="100" 
           oninput="atualizarCargaAtual(this.value)"
           class="w-full accent-[#e2b245] cursor-pointer"
         />
+      </div>
       </div>
     </div>
   </div>
@@ -330,100 +285,27 @@
   </div>
 
   <!-- BANNER PROMOCIONAL COMPACTO E FECHÁVEL -->
-  <div id="ad-gotrix" class="hidden fixed bottom-40 left-4 right-4 z-20 max-w-md mx-auto bg-[#121212] p-3 rounded-2xl border border-[#e2b245]/40 shadow-2xl transition-all duration-300">
-    <button onclick="fecharAnuncio()" title="Fechar" class="absolute -top-2.5 -right-2.5 bg-[#1a1a1a] text-zinc-300 hover:text-[#e2b245] p-1.5 rounded-full border border-zinc-700 shadow">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
-    </button>
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 bg-zinc-900 rounded-xl border border-[#e2b245]/30 flex items-center justify-center text-[#e2b245] shrink-0">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="5.5" cy="17.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/>
-          <path d="M15 6h3l1.5 9"/><path d="M8 17.5h7l2-5.5h-4"/>
-        </svg>
-      </div>
-      <div class="min-w-0 flex-1">
-        <span class="text-[9px] uppercase tracking-wider text-[#e2b245] font-extrabold">Loja GoTrix Oficial</span>
-        <p class="text-xs font-bold text-white truncate">Test-drive e peças para sua scooter!</p>
-      </div>
-      <a href="https://gotrixoficial.com.br" target="_blank" class="bg-[#e2b245] text-black font-extrabold text-[11px] px-3 py-2 rounded-xl shrink-0">
-        Ver Loja
-      </a>
+  <section id="cockpit-rota" class="cockpit cockpit-panel cockpit-bottom hidden" aria-label="Resumo da viagem">
+    <div class="cockpit-row">
+      <strong id="cockpit-destino" class="truncate min-w-0"></strong>
+      <button id="btn-limpar-rota" class="cockpit-button" onclick="limparRota()">Encerrar</button>
     </div>
-  </div>
-
-  <!-- ELEMENTOS FLUTUANTES ACIMA DO RODAPÉ -->
-  <div class="fixed bottom-20 left-0 right-0 z-20 px-4 pointer-events-none">
-    <div class="max-w-md mx-auto flex items-end justify-between">
-      
-      <!-- 2. INFERIOR ESQUERDO: Velocímetro Circular + Limite -->
-      <div class="relative pointer-events-auto">
-        <div class="absolute -top-2 -right-3 z-10 w-9 h-9 rounded-full bg-white border-[3px] border-red-500 flex items-center justify-center shadow-md">
-          <span id="limite-via" class="text-black font-black text-xs leading-none">32</span>
-        </div>
-
-        <div class="w-20 h-20 rounded-full bg-[#141414] border-2 border-zinc-700 shadow-[0_6px_20px_rgba(0,0,0,0.85)] flex flex-col items-center justify-center relative">
-          <svg class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 80 80">
-            <circle cx="40" cy="40" r="34" stroke="#27272a" stroke-width="5" fill="none" />
-            <circle id="arco-velocidade" cx="40" cy="40" r="34" stroke="#e2b245" stroke-width="5" fill="none" stroke-dasharray="213" stroke-dashoffset="213" stroke-linecap="round" />
-          </svg>
-          <span id="velocidade-valor" class="text-2xl font-black text-white leading-none z-10">0</span>
-          <span class="text-[10px] font-bold text-zinc-400 leading-none mt-0.5 z-10">km/h</span>
-        </div>
-      </div>
-
-      <!-- 3. INFERIOR CENTRO: Pílula com nome da via -->
-      <div class="mb-1 px-3 py-1 rounded-full bg-[#e2b245] text-black font-extrabold text-xs shadow-lg border border-black/20 max-w-[145px] truncate pointer-events-auto">
-        <span id="via-atual-texto">Ciclovia / Via</span>
-      </div>
-
-      <!-- 4. INFERIOR DIREITO: Botão de Recentralizar Inteligente -->
-      <div class="flex flex-col items-center pointer-events-auto">
-        <button id="btn-recentralizar" onclick="recentralizarUsuario()" title="Recentralizar no meu GPS" class="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-[#d97706] border-[3px] border-white shadow-[0_6px_20px_rgba(0,0,0,0.8)] flex items-center justify-center active:scale-95 transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
-            <circle cx="12" cy="12" r="8" stroke-opacity="0.4"/>
-          </svg>
-        </button>
-        <span id="badge-recentralizar" class="hidden mt-1 text-[9px] font-black uppercase bg-black text-[#e2b245] px-2 py-0.5 rounded-full border border-[#e2b245]/50 shadow">
-          Recentralizar
-        </span>
-      </div>
-
+    <div id="opcoes-rota" class="cockpit-row mt-2">
+      <button class="cockpit-button" id="btn-ciclo" onclick="selecionarRota('ciclo')">Priorizar ciclovias</button>
+      <button class="cockpit-button hidden" id="btn-curta" onclick="selecionarRota('curta')">Mais curta</button>
     </div>
-  </div>
-
-  <!-- 5. RODAPÉ FIXO -->
-  <footer class="fixed bottom-0 left-0 right-0 z-20 h-16 bg-[#111111] border-t border-zinc-800 shadow-[0_-4px_20px_rgba(0,0,0,0.8)]">
-    <div class="max-w-md mx-auto h-full grid grid-cols-4 items-center">
-      <button onclick="toggleBusca()" title="Buscar destino e ajustar bateria" class="h-full flex items-center justify-center border-r border-zinc-800 text-zinc-300 hover:text-[#e2b245] active:bg-zinc-900 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-      </button>
-
-      <div onclick="toggleResumoRota()" title="Ver todas as ruas e gasto de bateria" class="col-span-2 h-full flex flex-col items-center justify-center px-2 cursor-pointer active:bg-zinc-900 transition">
-        <div class="flex items-center gap-1.5">
-          <span id="hora-chegada" class="text-lg font-black text-white leading-none">--:--</span>
-          <span id="badge-relevo" class="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
-            Gasto --% ⚡
-          </span>
-        </div>
-        <div class="flex items-center gap-1.5 text-xs font-bold text-zinc-400 mt-1">
-          <span id="tempo-texto">0 min</span>
-          <span class="w-4 h-4 rounded-full bg-[#e2b245] text-black inline-flex items-center justify-center text-[10px] font-black">⌃</span>
-          <span id="distancia-texto">0 km</span>
-        </div>
-      </div>
-
-      <button onclick="abrirAnuncio()" title="Ofertas GoTrix" class="h-full flex flex-col items-center justify-center border-l border-zinc-800 text-[#e2b245] hover:bg-zinc-900 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-          <circle cx="12" cy="5" r="2"/><path d="M12 9v6m0 0l-3 5m3-5l3 5M7 11l5-2 5 2"/>
-        </svg>
-      </button>
+    <div class="cockpit-metrics">
+      <div><span class="cockpit-label" id="rotulo-tempo">Tempo</span><strong id="tempo-texto">—</strong></div>
+      <div><span class="cockpit-label" id="rotulo-distancia">Distância</span><strong id="distancia-texto">—</strong></div>
+      <div><span class="cockpit-label">Carga na chegada</span><strong id="badge-relevo">—</strong></div>
     </div>
-  </footer>
-
+    <p id="aviso-bateria" class="text-xs text-yellow-200" role="status"></p>
+    <div class="cockpit-row mt-2">
+      <button class="cockpit-button" onclick="toggleResumoRota()">Etapas</button>
+      <button id="btn-iniciar" class="cockpit-button cockpit-primary" onclick="iniciarNavegacao()">Iniciar navegação</button>
+    </div>
+  </section>
+  <div class="map-credit"><a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> · <a href="https://www.cyclosm.org/">CyclOSM</a></div>
   <div id="map-viewport">
     <div id="map" class="mapa-escuro"></div>
   </div>
@@ -431,6 +313,33 @@
   <script>
     let posAtual = [-25.5347, -49.2064]; 
     let posAnterior = null;
+    let gpsPronto = false;
+    let emNavegacao = false;
+    let perspectiva = false;
+    let velocidadeAtual = null;
+    let veiculo = localStorageSeguro('gotrix_veiculo') === 'scooter' ? 'scooter' : 'bike';
+    let alcanceKm = Number(localStorageSeguro('gotrix_alcance_' + veiculo)) || null;
+    let rotas = {};
+    let modoRota = 'ciclo';
+    let destinoRota = null;
+    let pedidoRota = 0;
+    let progressoRota = 0;
+    let distanciaPercorridaAntesDoDesvio = 0;
+    let ultimaManobra = -1;
+    let ultimoRecalculo = 0;
+    let pontosForaDaRota = 0;
+
+    function localStorageSeguro(chave, valor) {
+      try {
+        if (valor === undefined) return localStorage.getItem(chave);
+        localStorage.setItem(chave, valor);
+      } catch {}
+    }
+
+    function definirStatus(mensagem) {
+      document.getElementById('gps-status').textContent = mensagem;
+    }
+
     let anguloAtual = 0;
     let marcadorUsuario = null;
     let marcadorDestino = null;
@@ -440,15 +349,11 @@
     let mapaEscuroAtivo = true;
     let modoBussolaAtivo = true;
     let seguirUsuario = true;
-    let modoPilotagem = 'eco';
-    let voltagemBateria = 48;
     let cargaAtualPct = 100;
 
     let manterTelaAtiva = false;
     let wakeLockSentinel = null;
 
-    let fusoHorarioAtual = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo';
-    let ultimaCoordFuso = null;
 
     let vozAtiva = true;
     let chaveVozSelecionada = '';
@@ -456,7 +361,11 @@
     let vozesDisponiveis = [];
     let ultimaFalaTexto = '';
     let ultimoTempoFala = 0;
-    let avisoProximidadeFalado = false;
+
+    if (!window.L) {
+      definirStatus('O mapa não carregou. Verifique a conexão e recarregue a página.');
+      throw Error('Leaflet indisponível');
+    }
 
     const map = L.map('map', { zoomControl: false }).setView(posAtual, 17);
     
@@ -655,101 +564,12 @@
       } catch (e) {}
     }
 
-    function formatarHoraNoFuso(dataObj, timeZone) {
-      try {
-        return dataObj.toLocaleTimeString('pt-BR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: timeZone || undefined
-        });
-      } catch (e) {
-        return dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      }
-    }
-
-    async function atualizarFusoPorLocalizacao(lat, lng) {
-      if (ultimaCoordFuso) {
-        const delta = Math.abs(lat - ultimaCoordFuso[0]) + Math.abs(lng - ultimaCoordFuso[1]);
-        if (delta < 0.08) return;
-      }
-      ultimaCoordFuso = [lat, lng];
-
-      try {
-        const url = `https://timeapi.io/api/timezone/coordinate?latitude=${lat}&longitude=${lng}`;
-        const res = await fetch(url);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data && data.timeZone) {
-          fusoHorarioAtual = data.timeZone;
-          atualizarRelogioRodape();
-          if (ultimaRotaDados) {
-            atualizarMetricasRota(ultimaRotaDados.distance);
-          }
-        }
-      } catch (e) {}
-    }
-
-    function atualizarRelogioRodape() {
-      const horaEl = document.getElementById('hora-chegada');
-      if (!ultimaRotaDados) {
-        horaEl.innerText = formatarHoraNoFuso(new Date(), fusoHorarioAtual);
-      }
-    }
-
-    function atualizarIndicadorBateriaVertical(sobraPrevistaPct = null) {
-      const barraAtual = document.getElementById('barra-bateria-vertical');
-      const barraChegada = document.getElementById('barra-bateria-chegada');
-      const textoPct = document.getElementById('texto-bateria-vertical');
-      const subtextoV = document.getElementById('subtexto-bateria-vertical');
-
-      const pctClamped = Math.max(0, Math.min(100, cargaAtualPct));
-      barraAtual.style.height = `${pctClamped}%`;
-      textoPct.innerText = `${pctClamped}%`;
-      subtextoV.innerText = `${voltagemBateria}V`;
-
-      if (pctClamped <= 20) {
-        barraAtual.className = "w-full rounded-b-lg bg-red-500 transition-all duration-300";
-      } else if (pctClamped <= 45) {
-        barraAtual.className = "w-full rounded-b-lg bg-yellow-400 transition-all duration-300";
-      } else {
-        barraAtual.className = "w-full rounded-b-lg bg-[#e2b245] transition-all duration-300";
-      }
-
-      if (sobraPrevistaPct !== null && !isNaN(sobraPrevistaPct)) {
-        const sobraClamped = Math.max(0, Math.min(100, sobraPrevistaPct));
-        barraChegada.classList.remove('hidden');
-        barraChegada.style.height = `${sobraClamped}%`;
-      } else {
-        barraChegada.classList.add('hidden');
-        barraChegada.style.height = '0%';
-      }
-    }
-
-    function atualizarVoltagemDigitada(valor) {
-      const parsed = parseFloat(valor);
-      if (isNaN(parsed) || parsed <= 0) {
-        voltagemBateria = 48;
-      } else {
-        voltagemBateria = Math.min(120, Math.max(12, parsed));
-      }
-
-      atualizarIndicadorBateriaVertical();
-      if (ultimaRotaDados) {
-        atualizarMetricasRota(ultimaRotaDados.distance);
-      }
-    }
-
-    function setarVoltagemRapida(volts) {
-      voltagemBateria = volts;
-      document.getElementById('input-voltagem').value = volts;
-      atualizarIndicadorBateriaVertical();
-      if (ultimaRotaDados) {
-        atualizarMetricasRota(ultimaRotaDados.distance);
-      }
+    function atualizarIndicadorBateriaVertical() {
+      document.getElementById('texto-bateria-vertical').textContent = cargaAtualPct + '%';
     }
 
     function atualizarCargaAtual(valor) {
-      cargaAtualPct = parseInt(valor, 10) || 100;
+      cargaAtualPct = Math.min(100, Math.max(0, Number(valor)));
       document.getElementById('label-carga-atual').innerText = `${cargaAtualPct}%`;
       atualizarIndicadorBateriaVertical();
       if (ultimaRotaDados) {
@@ -758,15 +578,25 @@
     }
 
     function calcularEstimativaBateria(distanciaKm) {
-      const base48vPorKm = modoPilotagem === 'eco' ? 2.1 : 3.0;
-      const escalaVoltagem = Math.min(1.6, Math.max(0.55, 48 / voltagemBateria));
-      const taxaPorKm = base48vPorKm * escalaVoltagem;
+      if (!alcanceKm) return { gastoPct: null, sobraPct: null };
+      const gastoPct = distanciaKm / alcanceKm * 100;
+      return { gastoPct: Math.round(gastoPct), sobraPct: Math.round(cargaAtualPct - gastoPct) };
+    }
 
-      const fatorEsforco = distanciaKm > 4 ? 1.15 : 1.0;
-      const gastoPct = Math.min(100, Math.max(1, Math.round(distanciaKm * taxaPorKm * fatorEsforco)));
-      const sobraPct = cargaAtualPct - gastoPct;
+    function atualizarAlcance(valor) {
+      const alcance = Number(valor);
+      alcanceKm = alcance >= 1 && alcance <= 500 ? alcance : null;
+      localStorageSeguro('gotrix_alcance_' + veiculo, alcanceKm ?? '');
+      if (ultimaRotaDados) atualizarMetricasRota(ultimaRotaDados.distance);
+    }
 
-      return { gastoPct, sobraPct };
+    function trocarVeiculo(valor) {
+      veiculo = valor === 'scooter' ? 'scooter' : 'bike';
+      localStorageSeguro('gotrix_veiculo', veiculo);
+      alcanceKm = Number(localStorageSeguro('gotrix_alcance_' + veiculo)) || null;
+      document.getElementById('alcance-input').value = alcanceKm ?? '';
+      document.getElementById('nota-veiculo').classList.toggle('hidden', veiculo !== 'scooter');
+      if (ultimaRotaDados) atualizarMetricasRota(ultimaRotaDados.distance);
     }
 
     function atualizarVisualBotaoVoz() {
@@ -792,36 +622,6 @@
         falarInstrucao("Voz de navegação ativada", true);
       } else if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-      }
-    }
-
-    function distanciaEmMetros(lat1, lon1, lat2, lon2) {
-      const R = 6371000;
-      const toRad = (deg) => deg * Math.PI / 180;
-      const dLat = toRad(lat2 - lat1);
-      const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    }
-
-    function verificarProximidadeManobra() {
-      if (!ultimaRotaDados || !ultimaRotaDados.legs?.[0]?.steps?.length) return;
-      const steps = ultimaRotaDados.legs[0].steps;
-      const proxPasso = steps.length > 1 ? steps[1] : steps[0];
-      const loc = proxPasso?.maneuver?.location;
-      if (!loc) return;
-
-      const distRestante = distanciaEmMetros(posAtual[0], posAtual[1], loc[1], loc[0]);
-      const info = descreverManobra(proxPasso);
-
-      if (distRestante <= 110 && !avisoProximidadeFalado) {
-        avisoProximidadeFalado = true;
-        const metrosArredondados = Math.max(20, Math.round(distRestante / 10) * 10);
-        falarInstrucao(`Em ${metrosArredondados} metros, ${info.acao} ${info.rua}`);
-      } else if (distRestante > 180) {
-        avisoProximidadeFalado = false;
       }
     }
 
@@ -863,7 +663,7 @@
 
     function formatarDistanciaCurta(metros) {
       if (metros >= 1000) return `${(metros / 1000).toFixed(1)} km`;
-      return `${Math.max(10, Math.round(metros / 10) * 10)} m`;
+      return `${Math.round(metros / 10) * 10} m`;
     }
 
     function focarEtapaNoMapa(lat, lng) {
@@ -891,13 +691,15 @@
 
       const steps = ultimaRotaDados.legs[0].steps;
       const totalKm = (ultimaRotaDados.distance / 1000).toFixed(1);
-      const { gastoPct, sobraPct } = calcularEstimativaBateria(parseFloat(totalKm));
+      const { gastoPct, sobraPct } = calcularEstimativaBateria((ultimaRotaDados.distance + distanciaPercorridaAntesDoDesvio) / 1000);
 
-      titulo.innerText = `${steps.length} etapas • ${totalKm} km (${voltagemBateria}V)`;
-      document.getElementById('detalhe-gasto-rota').innerText = `-${gastoPct}%`;
+      titulo.innerText = `${steps.length} etapas • ${totalKm} km`;
+      document.getElementById('detalhe-gasto-rota').innerText = gastoPct === null ? '—' : `-${gastoPct}%`;
 
       const sobraEl = document.getElementById('detalhe-sobra-rota');
-      if (sobraPct <= 0) {
+      if (sobraPct === null) {
+        sobraEl.textContent = "Informe a autonomia do veículo";
+      } else if (sobraPct <= 0) {
         sobraEl.innerText = `Carga insuficiente (${sobraPct}%) ⚠️`;
         sobraEl.className = "text-red-400 ml-1 font-black";
       } else if (sobraPct < 20) {
@@ -912,7 +714,7 @@
         const info = descreverManobra(step);
         const distTexto = step.maneuver?.type === 'arrive' ? 'Destino' : formatarDistanciaCurta(step.distance);
         const coords = step.maneuver?.location;
-        const clickHandler = coords ? `onclick="focarEtapaNoMapa(${coords[1]}, ${coords[0]})"` : '';
+        const clickHandler = coords?.length === 2 && coords.every(Number.isFinite) ? `onclick="focarEtapaNoMapa(${coords[1]}, ${coords[0]})"` : '';
 
         return `
           <div ${clickHandler} class="py-2.5 px-2 flex items-center justify-between gap-3 hover:bg-zinc-900/90 rounded-xl cursor-pointer transition">
@@ -921,8 +723,8 @@
                 ${info.seta}
               </div>
               <div class="min-w-0">
-                <p class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">${index + 1}. ${info.acao}</p>
-                <p class="text-xs font-extrabold text-white truncate">${info.rua}</p>
+                <p class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">${index + 1}. ${escaparHTML(info.acao)}</p>
+                <p class="text-xs font-extrabold text-white truncate">${escaparHTML(info.rua)}</p>
               </div>
             </div>
             <span class="text-xs font-black text-[#e2b245] shrink-0">${distTexto}</span>
@@ -983,47 +785,23 @@
       }
     });
 
-    function definirModoPilotagem(modo) {
-      modoPilotagem = modo;
-      const btnEco = document.getElementById('btn-modo-eco');
-      const btnNormal = document.getElementById('btn-modo-normal');
-
-      if (modo === 'eco') {
-        btnEco.className = "py-2 px-2.5 rounded-xl text-xs font-extrabold bg-[#e2b245] text-black flex items-center justify-center gap-1 whitespace-nowrap transition";
-        btnNormal.className = "py-2 px-2.5 rounded-xl text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700 flex items-center justify-center gap-1 whitespace-nowrap transition";
-      } else {
-        btnNormal.className = "py-2 px-2.5 rounded-xl text-xs font-extrabold bg-[#e2b245] text-black flex items-center justify-center gap-1 whitespace-nowrap transition";
-        btnEco.className = "py-2 px-2.5 rounded-xl text-xs font-bold bg-[#1a1a1a] text-zinc-300 border border-zinc-700 flex items-center justify-center gap-1 whitespace-nowrap transition";
-      }
-
-      if (ultimaRotaDados) {
-        atualizarMetricasRota(ultimaRotaDados.distance);
-      }
-    }
-
     function limparRota() {
-      if (linhaRota) {
-        map.removeLayer(linhaRota);
-        linhaRota = null;
-      }
-      if (marcadorDestino) {
-        map.removeLayer(marcadorDestino);
-        marcadorDestino = null;
-      }
-      ultimaRotaDados = null;
-      avisoProximidadeFalado = false;
+      pedidoRota++;
+      linhaRota?.remove();
+      marcadorDestino?.remove();
+      linhaRota = marcadorDestino = ultimaRotaDados = destinoRota = null;
+      rotas = {};
+      distanciaPercorridaAntesDoDesvio = 0;
+      emNavegacao = false;
+      aplicarPerspectiva(false);
       fecharResumoRota();
-      atualizarIndicadorBateriaVertical(null);
-      falarInstrucao("Rota encerrada", true);
-      document.getElementById('btn-limpar-rota').classList.add('hidden');
-      document.getElementById('distancia-manobra').innerText = 'Pronto';
-      document.getElementById('rua-manobra').innerText = 'Toque na lupa abaixo ou no mapa';
-      document.getElementById('via-atual-texto').innerText = 'Ciclovia / Via';
-      document.getElementById('tempo-texto').innerText = '0 min';
-      document.getElementById('distancia-texto').innerText = '0 km';
-      document.getElementById('badge-relevo').innerText = 'Gasto --% ⚡';
-      atualizarRelogioRodape();
-      recentralizarUsuario();
+      window.speechSynthesis?.cancel();
+      document.getElementById('cockpit-rota').classList.add('hidden');
+      document.getElementById('manobra-cockpit').classList.add('hidden');
+      document.getElementById('btn-vista').classList.add('hidden');
+      document.getElementById('busca-cockpit').classList.remove('hidden');
+      atualizarIndicadorBateriaVertical();
+      definirStatus(gpsPronto ? 'GPS disponível' : 'GPS indisponível · informe a origem');
     }
 
     map.on('dragstart', () => {
@@ -1041,6 +819,10 @@
       btn.classList.remove('ring-4', 'ring-[#e2b245]/60', 'animate-pulse');
       badge.classList.add('hidden');
 
+      if (!gpsPronto) {
+        definirStatus('GPS indisponível · informe a origem');
+        return;
+      }
       map.flyTo(posAtual, 17, { duration: 0.6 });
       aplicarOrientacaoMapa(anguloAtual);
     }
@@ -1075,17 +857,10 @@
 
       const mapEl = document.getElementById('map');
       const scooterEl = document.getElementById('scooter-cursor');
-      const agulhaEl = document.getElementById('agulha-bussola');
 
-      if (modoBussolaAtivo) {
-        mapEl.style.transform = `translate(-50%, -50%) rotate(${-anguloAtual}deg)`;
-        if (scooterEl) scooterEl.style.transform = `rotate(${anguloAtual}deg)`;
-        if (agulhaEl) agulhaEl.style.transform = `rotate(${-anguloAtual}deg)`;
-      } else {
-        mapEl.style.transform = `translate(-50%, -50%) rotate(0deg)`;
-        if (scooterEl) scooterEl.style.transform = `rotate(${anguloAtual}deg)`;
-        if (agulhaEl) agulhaEl.style.transform = `rotate(0deg)`;
-      }
+      const bearing = emNavegacao && perspectiva && modoBussolaAtivo ? -anguloAtual : 0;
+      mapEl.style.setProperty('--bearing', bearing + 'deg');
+      if (scooterEl) scooterEl.style.transform = `rotate(${anguloAtual + bearing}deg)`;
     }
 
     window.addEventListener('deviceorientationabsolute', handleOrientation, true);
@@ -1106,14 +881,20 @@
       }
     }
 
-    function toggleBusca() {
+    function abrirPainel(tipo) {
       fecharResumoRota();
       fecharMenuConfig();
-      const modal = document.getElementById('modal-busca');
-      modal.classList.toggle('hidden');
-      if (!modal.classList.contains('hidden')) {
-        document.getElementById('destino-input').focus();
-      }
+      document.getElementById('modal-busca').classList.remove('hidden');
+      document.getElementById('titulo-busca').textContent = tipo === 'bateria' ? 'Bateria e autonomia' : 'Destino e origem';
+      document.getElementById('form-destino').classList.toggle('hidden', tipo !== 'destino');
+      document.getElementById('form-bateria').classList.toggle('hidden', tipo !== 'bateria');
+      document.getElementById('veiculo-input').value = veiculo;
+      trocarVeiculo(veiculo);
+      document.getElementById(tipo === 'destino' ? 'destino-input' : 'alcance-input').focus();
+    }
+
+    function fecharBusca() {
+      document.getElementById('modal-busca').classList.add('hidden');
     }
 
     function atualizarVisualTemaMapa() {
@@ -1189,194 +970,284 @@
       return (toDeg(Math.atan2(y, x)) + 360) % 360;
     }
 
-    function atualizarVelocimetro(kmh) {
-      const valEl = document.getElementById('velocidade-valor');
-      const arcoEl = document.getElementById('arco-velocidade');
-      valEl.innerText = kmh;
-
-      if (kmh > 32) {
-        valEl.className = "text-2xl font-black text-red-500 leading-none z-10";
-        arcoEl.setAttribute("stroke", "#ef4444");
-      } else {
-        valEl.className = "text-2xl font-black text-white leading-none z-10";
-        arcoEl.setAttribute("stroke", "#e2b245");
-      }
-
-      const maxKmh = 50;
-      const perimetro = 213;
-      const progresso = Math.min(kmh / maxKmh, 1);
-      arcoEl.style.strokeDashoffset = perimetro - (perimetro * progresso);
+    function escaparHTML(valor) {
+      const el = document.createElement('span');
+      el.textContent = valor ?? '';
+      return el.innerHTML;
     }
 
-    function fecharAnuncio() {
-      document.getElementById('ad-gotrix').classList.add('hidden');
+    function aplicarPerspectiva(ativa) {
+      perspectiva = ativa;
+      document.body.classList.toggle('perspectiva', ativa);
+      const botao = document.getElementById('btn-vista');
+      botao.textContent = ativa ? '2D' : '3D';
+      botao.setAttribute('aria-pressed', String(ativa));
+      aplicarOrientacaoMapa(anguloAtual);
     }
 
-    function abrirAnuncio() {
-      fecharResumoRota();
-      fecharMenuConfig();
-      document.getElementById('ad-gotrix').classList.remove('hidden');
+    function alternarPerspectiva() {
+      if (emNavegacao) aplicarPerspectiva(!perspectiva);
     }
 
     function atualizarMetricasRota(distanciaMetros) {
-      const distanciaKm = (distanciaMetros / 1000).toFixed(1);
-      const velocidadeMedia = modoPilotagem === 'eco' ? 18 : 26;
-      const tempoMinutos = Math.max(1, Math.round((distanciaMetros / 1000) / velocidadeMedia * 60));
-
-      const chegada = new Date(Date.now() + tempoMinutos * 60000);
-      const horaFormatada = formatarHoraNoFuso(chegada, fusoHorarioAtual);
-
-      document.getElementById('hora-chegada').innerText = horaFormatada;
-      document.getElementById('distancia-texto').innerText = `${distanciaKm} km`;
-      document.getElementById('tempo-texto').innerText = `${tempoMinutos} min`;
-
-      const { gastoPct, sobraPct } = calcularEstimativaBateria(parseFloat(distanciaKm));
-      atualizarIndicadorBateriaVertical(sobraPct);
-
-      const badgeRelevo = document.getElementById('badge-relevo');
-      if (sobraPct <= 0) {
-        badgeRelevo.innerText = `Gasto ${gastoPct}% ⚠️`;
-        badgeRelevo.className = "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400";
-      } else if (modoPilotagem === 'eco') {
-        badgeRelevo.innerText = `Gasto ~${gastoPct}% ⚡`;
-        badgeRelevo.className = "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400";
-      } else {
-        badgeRelevo.innerText = `Gasto ~${gastoPct}%`;
-        badgeRelevo.className = "text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-400";
+      if (!ultimaRotaDados) return;
+      const restante = Math.max(0, distanciaMetros - (emNavegacao ? progressoRota : 0));
+      const tempo = Math.ceil(ultimaRotaDados.duration * restante / Math.max(1, distanciaMetros) / 60);
+      // The user-entered charge is the departure charge, so use total distance.
+      const { sobraPct } = calcularEstimativaBateria((distanciaMetros + distanciaPercorridaAntesDoDesvio) / 1000);
+      document.getElementById('distancia-texto').textContent = formatarDistanciaCurta(restante);
+      document.getElementById('tempo-texto').textContent = emNavegacao ? (velocidadeAtual === null ? '— km/h' : velocidadeAtual + ' km/h') : tempo + ' min';
+      document.getElementById('badge-relevo').textContent = sobraPct === null ? '—' : '~' + Math.max(0, sobraPct) + '%';
+      document.getElementById('aviso-bateria').textContent = sobraPct === null
+        ? 'Informe a autonomia do veículo para calcular a carga na chegada.'
+        : sobraPct <= 0 ? 'Carga estimada insuficiente para este trajeto.'
+        : sobraPct < 20 ? 'A previsão indica pouca carga na chegada.' : '';
       }
-
-      if (!document.getElementById('painel-etapas').classList.contains('hidden')) {
-        renderizarListaEtapas();
-      }
-    }
 
     function iniciarGPS() {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.watchPosition(
-          (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const heading = position.coords.heading;
-            const speedMs = position.coords.speed;
-            const primeiraVez = !marcadorUsuario;
-            
-            posAtual = [lat, lng];
-            atualizarFusoPorLocalizacao(lat, lng);
-
-            const kmh = (speedMs !== null && !isNaN(speedMs) && speedMs >= 0) ? Math.round(speedMs * 3.6) : 0;
-            atualizarVelocimetro(kmh);
-
-            if (!marcadorUsuario) {
-              marcadorUsuario = L.marker(posAtual, { icon: iconeScooterWaze, zIndexOffset: 1000 }).addTo(map);
-            } else {
-              marcadorUsuario.setLatLng(posAtual);
-            }
-
-            if (heading !== null && !isNaN(heading) && kmh > 2) {
-              aplicarOrientacaoMapa(heading);
-            } else if (posAnterior && (posAnterior[0] !== lat || posAnterior[1] !== lng)) {
-              aplicarOrientacaoMapa(calcularDirecao(posAnterior[0], posAnterior[1], lat, lng));
-            }
-
-            posAnterior = [lat, lng];
-            verificarProximidadeManobra();
-
-            if (primeiraVez || seguirUsuario) {
-              map.setView(posAtual, map.getZoom(), { animate: !primeiraVez });
-            }
-          },
-          () => {
-            if (!marcadorUsuario) marcadorUsuario = L.marker(posAtual, { icon: iconeScooterWaze, zIndexOffset: 1000 }).addTo(map);
-          },
-          { enableHighAccuracy: true, maximumAge: 1500, timeout: 10000 }
-        );
+      if (!navigator.geolocation) {
+        definirStatus('GPS indisponível · informe a origem');
+        return;
       }
+      navigator.geolocation.watchPosition(position => {
+        const { latitude, longitude, speed, heading, accuracy } = position.coords;
+        if (accuracy > 100) {
+          gpsPronto = false;
+          definirStatus('Aguardando uma localização mais precisa…');
+          return;
+        }
+        const primeira = !gpsPronto;
+        const novaPosicao = [latitude, longitude];
+        gpsPronto = true;
+        posAtual = novaPosicao;
+        velocidadeAtual = Number.isFinite(speed) && speed >= 0 ? Math.round(speed * 3.6) : null;
+        if (!marcadorUsuario) marcadorUsuario = L.marker(posAtual, { icon: iconeScooterWaze, zIndexOffset: 1000 }).addTo(map);
+        else marcadorUsuario.setLatLng(posAtual);
+        if (velocidadeAtual > 2 && Number.isFinite(heading)) aplicarOrientacaoMapa(heading);
+        else if (posAnterior && velocidadeAtual > 2) aplicarOrientacaoMapa(calcularDirecao(...posAnterior, ...posAtual));
+        posAnterior = novaPosicao;
+        if (seguirUsuario && !ultimaRotaDados) {
+          map.setView(posAtual, primeira ? 15 : map.getZoom(), { animate: false });
+        } else if (emNavegacao) {
+          if (seguirUsuario) map.setView(posAtual, map.getZoom(), { animate: false });
+          acompanharRota(accuracy);
+        }
+        if (primeira) definirStatus(emNavegacao ? 'Navegação em andamento' : 'GPS disponível');
+      }, () => {
+        gpsPronto = false;
+        velocidadeAtual = null;
+        definirStatus(emNavegacao ? 'GPS indisponível no momento' : 'GPS indisponível · informe a origem');
+        if (ultimaRotaDados) atualizarMetricasRota(ultimaRotaDados.distance);
+      }, { enableHighAccuracy: true, maximumAge: 1500, timeout: 10000 });
+    }
+
+    async function localizarEndereco(texto) {
+      const params = new URLSearchParams({ q: texto, lat: posAtual[0], lon: posAtual[1], limit: 1 });
+      const resposta = await fetch('https://photon.komoot.io/api/?' + params, { signal: AbortSignal.timeout(12000) });
+      if (!resposta.ok) throw Error('Busca indisponível. Tente novamente.');
+      const lugar = (await resposta.json()).features?.[0];
+      if (!lugar) throw Error('Endereço não encontrado: ' + texto);
+      const [lon, lat] = lugar.geometry.coordinates;
+      return { ponto: [lat, lon], nome: lugar.properties.name || texto };
     }
 
     async function buscarEndereco() {
-      const query = document.getElementById('destino-input').value.trim();
-      if (!query) return;
-
+      const texto = document.getElementById('destino-input').value.trim();
+      const origemTexto = document.getElementById('origem-input').value.trim();
+      if (!texto) return;
+      if (!origemTexto && !gpsPronto) {
+        fecharBusca();
+        definirStatus('Informe o endereço de origem para traçar a rota.');
+        return;
+      }
+      const numero = ++pedidoRota;
+      fecharBusca();
+      definirStatus('Buscando endereço…');
       try {
-        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lat=${posAtual[0]}&lon=${posAtual[1]}&limit=1`;
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (data.features && data.features.length > 0) {
-          const coords = data.features[0].geometry.coordinates;
-          const nomeDestino = data.features[0].properties.name || query;
-          document.getElementById('modal-busca').classList.add('hidden');
-          definirDestinoECalcular(coords[1], coords[0], nomeDestino);
-        } else {
-          alert("Nenhum local encontrado.");
-        }
-      } catch (e) {
-        alert("Erro na busca.");
+        const [destino, origem] = await Promise.all([
+          localizarEndereco(texto), origemTexto ? localizarEndereco(origemTexto) : { ponto: posAtual },
+        ]);
+        if (numero === pedidoRota) await calcularRotas(origem.ponto, destino, false, Boolean(origemTexto));
+      } catch (erro) {
+        if (numero === pedidoRota) definirStatus(erro.message || 'Busca indisponível.');
       }
     }
 
-    map.on('click', (e) => {
-      definirDestinoECalcular(e.latlng.lat, e.latlng.lng, "Destino no mapa");
+    async function pedirRota(origem, destino, curta) {
+      const dados = {
+        locations: [origem, destino].map(([lat, lon]) => ({ lat, lon })),
+        costing: 'bicycle',
+        costing_options: { bicycle: { bicycle_type: 'Hybrid', use_roads: 0, use_hills: 0.35, shortest: curta } },
+        format: 'osrm',
+        shape_format: 'geojson',
+        language: 'pt-BR',
+      };
+      const url = 'https://valhalla1.openstreetmap.de/route?' + new URLSearchParams({ json: JSON.stringify(dados) });
+      const resposta = await fetch(url, { signal: AbortSignal.timeout(15000) });
+      if (!resposta.ok) throw Error('O serviço não encontrou um trajeto ciclável.');
+      const rota = (await resposta.json()).routes?.[0];
+      if (!rota || !Number.isFinite(rota.distance) || !Number.isFinite(rota.duration) || !rota.geometry?.coordinates?.length || !rota.legs?.[0]?.steps?.length) {
+        throw Error('O serviço não retornou um trajeto completo.');
+      }
+      return rota;
+    }
+
+    async function calcularRotas(origem, destino, recalculo = false, origemManual = false) {
+      const numero = ++pedidoRota;
+      const modoAnterior = modoRota;
+      definirStatus(recalculo ? 'Recalculando trajeto…' : 'Calculando trajeto ciclável…');
+      try {
+        const [preferida, alternativa] = await Promise.all([
+          pedirRota(origem, destino.ponto, recalculo && modoAnterior === 'curta'),
+          recalculo ? null : pedirRota(origem, destino.ponto, true).catch(() => null),
+        ]);
+        if (numero !== pedidoRota) return;
+        rotas = recalculo && modoAnterior === 'curta' ? { curta: preferida } : { ciclo: preferida };
+        if (alternativa && alternativa.distance + 30 < preferida.distance) rotas.curta = alternativa;
+        if (!recalculo) {
+          destinoRota = { ...destino, origemManual };
+          marcadorDestino?.remove();
+          marcadorDestino = L.marker(destino.ponto, { icon: iconeDestino }).addTo(map);
+        }
+        document.getElementById('btn-curta').classList.toggle('hidden', !rotas.curta);
+        document.getElementById('cockpit-destino').textContent = destino.nome;
+        if (recalculo) distanciaPercorridaAntesDoDesvio += progressoRota;
+        selecionarRota(recalculo ? modoAnterior : 'ciclo');
+        if (recalculo) acompanharRota(0, false);
+        definirStatus(recalculo ? 'Trajeto atualizado' : 'Prévia · acesso depende da sinalização local');
+      } catch (erro) {
+        if (numero === pedidoRota) definirStatus(erro.message || 'Não foi possível calcular o trajeto.');
+      }
+    }
+
+    function selecionarRota(modo) {
+      const rota = rotas[modo];
+      if (!rota) return;
+      modoRota = modo;
+      ultimaRotaDados = rota;
+      progressoRota = 0;
+      ultimaManobra = -1;
+      pontosForaDaRota = 0;
+      linhaRota?.remove();
+      linhaRota = L.geoJSON(rota.geometry, { style: { color: '#ffd65c', weight: 6, opacity: 0.98, className: 'rota-luz', interactive: false } }).addTo(map);
+      document.getElementById('cockpit-rota').classList.remove('hidden');
+      document.getElementById('opcoes-rota').classList.toggle('hidden', emNavegacao);
+      document.getElementById('btn-iniciar').classList.toggle('hidden', emNavegacao);
+      document.getElementById('btn-limpar-rota').textContent = emNavegacao ? 'Encerrar' : 'Limpar';
+      document.getElementById('rotulo-tempo').textContent = emNavegacao ? 'Velocidade' : 'Tempo';
+      document.getElementById('rotulo-distancia').textContent = emNavegacao ? 'Restante' : 'Distância';
+      for (const perfil of ['ciclo', 'curta']) {
+        const btn = document.getElementById('btn-' + perfil);
+        btn.classList.toggle('cockpit-primary', perfil === modo);
+        btn.setAttribute('aria-pressed', String(perfil === modo));
+      }
+      if (!emNavegacao) {
+        // Leaflet's viewport extends outside the physical screen in cockpit mode.
+        const larguraExtra = (map.getSize().x - window.innerWidth) / 2;
+        const alturaExtra = (map.getSize().y - window.innerHeight) / 2;
+        map.fitBounds(linhaRota.getBounds(), {
+          paddingTopLeft: [larguraExtra + 25, alturaExtra + 150],
+          paddingBottomRight: [larguraExtra + 25, alturaExtra + Math.min(245, window.innerHeight * .38)],
+          maxZoom: 17,
+        });
+      }
+      atualizarMetricasRota(rota.distance);
+      renderizarListaEtapas();
+    }
+
+    function iniciarNavegacao() {
+      if (!gpsPronto) {
+        definirStatus('A navegação precisa de um sinal GPS. A prévia permanece disponível.');
+        return;
+      }
+      if (!ultimaRotaDados || !destinoRota) return;
+      if (destinoRota.origemManual) {
+        definirStatus('Refaça a rota com “Usar minha localização” para iniciar daqui.');
+        return;
+      }
+      emNavegacao = true;
+      document.getElementById('manobra-cockpit').classList.remove('hidden');
+      document.getElementById('busca-cockpit').classList.add('hidden');
+      document.getElementById('btn-vista').classList.remove('hidden');
+      document.getElementById('opcoes-rota').classList.add('hidden');
+      document.getElementById('btn-iniciar').classList.add('hidden');
+      document.getElementById('btn-limpar-rota').textContent = 'Encerrar';
+      document.getElementById('rotulo-tempo').textContent = 'Velocidade';
+      document.getElementById('rotulo-distancia').textContent = 'Restante';
+      aplicarPerspectiva(true);
+      recentralizarUsuario();
+      definirStatus('Navegação em andamento');
+      acompanharRota(0, false);
+    }
+
+    function medirProgresso(coordenadas, posicao) {
+      const cosLat = Math.cos(posicao[0] * Math.PI / 180);
+      const plano = ([lon, lat]) => [(lon - posicao[1]) * 111320 * cosLat, (lat - posicao[0]) * 111320];
+      let acumulado = 0;
+      let melhor = { distancia: Infinity, progresso: 0 };
+      let anterior = plano(coordenadas[0]);
+      for (const coord of coordenadas.slice(1)) {
+        const ponto = plano(coord);
+        const dx = ponto[0] - anterior[0], dy = ponto[1] - anterior[1];
+        const comprimento = Math.hypot(dx, dy);
+        if (comprimento > 0) {
+          const t = Math.min(1, Math.max(0, -(anterior[0] * dx + anterior[1] * dy) / comprimento ** 2));
+          const distancia = Math.hypot(anterior[0] + t * dx, anterior[1] + t * dy);
+          if (distancia < melhor.distancia) melhor = { distancia, progresso: acumulado + t * comprimento };
+        }
+        acumulado += comprimento;
+        anterior = ponto;
+      }
+      return { ...melhor, total: acumulado };
+    }
+
+    function acompanharRota(precisao, permitirRecalculo = true) {
+      if (!ultimaRotaDados) return;
+      const rota = ultimaRotaDados;
+      const ajuste = medirProgresso(rota.geometry.coordinates, posAtual);
+      if (ajuste.distancia > Math.max(55, precisao * 1.5)) {
+        pontosForaDaRota++;
+        if (permitirRecalculo && pontosForaDaRota >= 3 && Date.now() - ultimoRecalculo > 20000) {
+          ultimoRecalculo = Date.now();
+          calcularRotas(posAtual, destinoRota, true);
+        }
+        return;
+      }
+      pontosForaDaRota = 0;
+      progressoRota = Math.max(progressoRota, rota.distance * ajuste.progresso / Math.max(1, ajuste.total));
+      const passos = rota.legs[0].steps;
+      let marco = 0;
+      let indice = passos.findIndex((passo, i) => {
+        if (i && marco >= progressoRota - 8) return true;
+        marco += passo.distance;
+        return false;
+      });
+      if (indice < 0) indice = passos.length - 1;
+      const passo = passos[indice];
+      const info = descreverManobra(passo);
+      const restante = Math.max(0, Math.min(rota.distance, marco) - progressoRota);
+      const chegada = passo.maneuver?.type === 'arrive' && rota.distance - progressoRota < 15;
+      document.getElementById('icone-manobra').textContent = chegada ? '✓' : info.seta;
+      document.getElementById('distancia-manobra').textContent = chegada ? 'Você chegou' : formatarDistanciaCurta(restante);
+      document.getElementById('rua-manobra').textContent = chegada ? destinoRota.nome : [info.acao, info.rua].filter(Boolean).join(' ');
+      if ((chegada || restante <= 100) && indice !== ultimaManobra) {
+        ultimaManobra = indice;
+        if (chegada) falarInstrucao('Você chegou ao destino');
+        else if (passo.maneuver?.type !== 'arrive') falarInstrucao(info.acao + ' ' + info.rua);
+      }
+      atualizarMetricasRota(rota.distance);
+    }
+
+    map.on('click', evento => {
+      if (emNavegacao) return;
+      if (!gpsPronto) {
+        abrirPainel('destino');
+        definirStatus('Informe a origem ou habilite o GPS para usar o mapa.');
+        return;
+      }
+      fecharBusca();
+      calcularRotas(posAtual, { ponto: [evento.latlng.lat, evento.latlng.lng], nome: 'Destino no mapa' });
     });
-
-    async function definirDestinoECalcular(destLat, destLng, nomeLocal = "Destino") {
-      avisoProximidadeFalado = false;
-
-      if (marcadorDestino) {
-        marcadorDestino.setLatLng([destLat, destLng]);
-      } else {
-        marcadorDestino = L.marker([destLat, destLng], { icon: iconeDestino }).addTo(map);
-      }
-
-      const origemStr = `${posAtual[1]},${posAtual[0]}`;
-      const destinoStr = `${destLng},${destLat}`;
-      const urlRota = `https://router.project-osrm.org/route/v1/bike/${origemStr};${destinoStr}?overview=full&steps=true&geometries=geojson`;
-
-      try {
-        const res = await fetch(urlRota);
-        const data = await res.json();
-
-        if (data.code === 'Ok' && data.routes.length > 0) {
-          const rota = data.routes[0];
-          ultimaRotaDados = rota;
-          
-          if (linhaRota) map.removeLayer(linhaRota);
-
-          linhaRota = L.geoJSON(rota.geometry, {
-            style: { color: '#e2b245', weight: 7, opacity: 0.95 }
-          }).addTo(map);
-
-          if (rota.geometry.coordinates && rota.geometry.coordinates.length > 1) {
-            const p1 = rota.geometry.coordinates[0];
-            const p2 = rota.geometry.coordinates[1];
-            aplicarOrientacaoMapa(calcularDirecao(p1[1], p1[0], p2[1], p2[0]));
-          }
-
-          recentralizarUsuario();
-          document.getElementById('btn-limpar-rota').classList.remove('hidden');
-
-          const passos = rota.legs[0].steps;
-          if (passos && passos.length > 0) {
-            const proxPasso = passos.length > 1 ? passos[1] : passos[0];
-            const distPasso = proxPasso.distance >= 1000 
-              ? `${(proxPasso.distance / 1000).toFixed(1)} km` 
-              : `${Math.round(proxPasso.distance)} m`;
-            
-            document.getElementById('distancia-manobra').innerText = distPasso;
-            document.getElementById('rua-manobra').innerText = proxPasso.name || nomeLocal;
-            document.getElementById('via-atual-texto').innerText = passos[0].name || "Via Local";
-
-            const infoFala = descreverManobra(proxPasso);
-            falarInstrucao(`Rota traçada. ${infoFala.acao} ${infoFala.rua}`, true);
-          }
-
-          atualizarMetricasRota(rota.distance);
-          renderizarListaEtapas();
-        }
-      } catch (e) {
-        alert("Erro ao traçar rota.");
-      }
-    }
 
     carregarPreferencias();
     atualizarVisualBotaoVoz();
@@ -1392,10 +1263,7 @@
       solicitarWakeLock();
     }
 
-    atualizarIndicadorBateriaVertical(null);
-    atualizarFusoPorLocalizacao(posAtual[0], posAtual[1]);
-    atualizarRelogioRodape();
-    setInterval(atualizarRelogioRodape, 10000);
+    atualizarIndicadorBateriaVertical();
     iniciarGPS();
   </script>
 </body>
