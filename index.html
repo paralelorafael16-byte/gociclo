@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>GoTrix - GPS para Mobilidade Urbana</title>
+  <title>Go</title>
+  <meta name="application-name" content="Go">
+  <meta name="apple-mobile-web-app-title" content="Go">
+  <meta name="theme-color" content="#0e0e0e">
   
   <style>
 *,::before,::after{box-sizing:border-box;border:0 solid #3f3f46}body,p,h3{margin:0}button,input,select{font:inherit;color:inherit}button{cursor:pointer;background:transparent}a{color:inherit;text-decoration:inherit}
@@ -93,11 +96,11 @@
 
   <style>
     :root {
-      --gold: #f9d34f;
-      --ink: #f6f8fb;
-      --muted: #aebbc7;
-      --surface: #101820;
-      --edge: #859aa439;
+      --gold: #ffcc00;
+      --ink: #fafafa;
+      --muted: #c1c1c1;
+      --surface: #141414;
+      --edge: #ffffff29;
       --esq: max(12px, env(safe-area-inset-left));
       --dir: max(12px, env(safe-area-inset-right));
       --topo: max(10px, env(safe-area-inset-top));
@@ -108,7 +111,7 @@
     body {
       height: 100dvh;
       overscroll-behavior: none;
-      background: #111a21;
+      background: #0e0e0e;
       color: var(--ink);
       font: 400 16px/1.35 Geist, system-ui, sans-serif;
     }
@@ -128,7 +131,7 @@
     .mapa-escuro .leaflet-tile-pane {
       filter: invert(100%) hue-rotate(175deg) saturate(68%) brightness(.79) contrast(1.1);
     }
-    .rota-luz { filter: drop-shadow(0 0 4px #ffd34c88) }
+    .rota-luz { filter: drop-shadow(0 0 4px #ffcc0088) }
     .cursor-navegacao { display: grid; place-items: center }
     .scooter-wrapper, .veiculo-3d {
       position: relative;
@@ -151,7 +154,7 @@
       width: min(580px, calc(100% - var(--esq) - var(--dir)));
     }
     .cockpit-panel, .cockpit-controls button {
-      background: linear-gradient(142deg,#17222bed,#101820f5 58%,#10161df7);
+      background: linear-gradient(142deg,#232323f5,#121212f5 58%,#0e0e0ef7);
       border: 1px solid var(--edge);
       box-shadow: inset 0 1px #ffffff13, 0 8px 28px #070a10a6;
     }
@@ -160,32 +163,43 @@
     .cockpit-top button { pointer-events: auto }
     .cockpit-row { display: flex; gap: 8px; align-items: center; justify-content: space-between }
     .faixa-topo { padding: 6px 7px 6px 12px }
-    .cockpit-brand { display: flex; align-items: center; gap: 8px; white-space: nowrap; font-size: 1.04rem; font-weight: 800 }
-    .cockpit-brand b {
+    .cockpit-brand {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      margin-inline: 3px auto;
+      color: var(--gold);
+    }
+    .marca-go {
+      position: relative;
       display: grid;
       place-items: center;
-      width: 32px;
-      height: 30px;
-      background: var(--gold);
-      color: #15191c;
-      clip-path: polygon(12% 0,100% 0,88% 100%,0 100%);
-      font-size: .85rem;
-      font-weight: 900;
-      font-style: italic;
+      width: 68px;
+      aspect-ratio: 648 / 342;
+      overflow: hidden;
     }
-    .cockpit-brand small { color: var(--muted); font-size: .64rem; letter-spacing: .08em }
+    .marca-go img {
+      position: absolute;
+      top: -6.43%;
+      left: 0;
+      width: 210.34%;
+      height: auto;
+      max-width: none;
+      clip-path: polygon(0 0,47.21% 0,47.21% 31%,47.54% 31%,47.54% 100%,0 100%);
+    }
+    .marca-go-alternativa { font-size: 1.55rem; font-weight: 900; line-height: 1; }
     .cockpit-button {
       min-width: 44px;
       min-height: 46px;
       padding: 0 14px;
       border: 1px solid var(--edge);
       border-radius: 15px;
-      background: #26323a;
+      background: #272727;
       color: var(--ink);
       font-size: .88rem;
       font-weight: 700;
     }
-    .cockpit-primary { color: #15191b; background: var(--gold); border-color: #ffe488; box-shadow: inset 0 1px #fff8 }
+    .cockpit-primary { color: #15191b; background: var(--gold); border-color: #ffe04d; box-shadow: inset 0 1px #fff8 }
     .btn-icone { padding: 0; width: 46px; font-size: 1.25rem }
     .btn-bateria {
       display: inline-flex;
@@ -203,7 +217,7 @@
       width: fit-content;
       max-width: 100%;
       border-radius: 12px;
-      background: #101820eb;
+      background: #111111eb;
       border: 1px solid var(--edge);
       padding: 5px 9px;
       color: #e0e9ef;
@@ -258,7 +272,7 @@
       margin: 8px 0;
       border: 1px solid var(--edge);
       border-radius: 17px;
-      background: #0c1319b3;
+      background: #080808b3;
     }
     .cockpit-metrics div { padding: 8px 9px; min-width: 0 }
     .cockpit-metrics div + div { border-left: 1px solid var(--edge) }
@@ -282,7 +296,7 @@
       align-items: end;
     }
     .cockpit-controls button { min-width: 46px; padding-inline: 9px }
-    #btn-vista[aria-pressed="true"] { color: var(--gold); border-color: #f9d34f8c }
+    #btn-vista[aria-pressed="true"] { color: var(--gold); border-color: #ffcc008c }
     #btn-recentralizar[data-localizado="true"] { font-size: 1.4rem }
     #btn-recentralizar[data-seguir="false"] { color: var(--gold) }
     .map-credit {
@@ -323,7 +337,7 @@
     #modal-busca input:not([type="range"]), #modal-busca select, #painel-config select {
       font-size: 16px;
       border: 1px solid var(--edge);
-      background: #212e37;
+      background: #252525;
     }
     #modal-busca button, #painel-config button, #painel-etapas button { min-height: 44px; min-width: 44px }
     #origem-detalhes { padding: 6px 0 }
@@ -338,7 +352,6 @@
       .cockpit { left: var(--esq); transform: none; width: clamp(246px,40vw,380px) }
       .cockpit-bottom { max-height: min(52dvh,calc(100dvh - var(--topo-painel,150px) - var(--base) - 22px)) }
       .cockpit-controls { right: var(--dir); bottom: calc(var(--base) + 23px) }
-      .cockpit-brand small { display: none }
       #modal-busca, #painel-config, #painel-etapas { left: var(--esq); transform: none; width: min(460px,60vw) }
     }
     @media (orientation: landscape) and (max-height: 420px) {
@@ -352,10 +365,10 @@
 </head>
 <body class="text-white select-none">
 
-  <section id="entrada-desktop" hidden><h1>GoTrix GPS</h1><p>Abra este app no celular ou tablet para usar o painel de navegação.</p></section>
+  <section id="entrada-desktop" hidden><h1>Go</h1><p>Abra este app no celular ou tablet para usar o painel de navegação.</p></section>
   <header class="cockpit cockpit-top">
     <div class="cockpit-panel cockpit-row faixa-topo">
-      <div class="cockpit-brand"><b aria-hidden="true">GO</b><span>GoTrix <small>GPS</small></span></div>
+      <div class="cockpit-brand"><span class="marca-go"><img src="https://gotrixoficial.com.br/wp-content/uploads/2025/08/logo-amarela-DMArrE2-.webp" alt="Go" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="marca-go-alternativa" hidden>Go</span></span></div>
       <button type="button" class="cockpit-button btn-bateria" onclick="abrirPainel('bateria')" aria-label="Ajustar a carga da bateria">
         <span class="icone-bateria" aria-hidden="true"></span><span id="texto-bateria-vertical">100%</span>
       </button>
@@ -1342,9 +1355,9 @@
         }
         cena.addSource('gotrix-rota',{type:'geojson',data:vazio3d});
         for (const [id,paint] of [
-          ['gotrix-halo',{'line-color':'#ffd34f','line-width':17,'line-opacity':.27,'line-blur':5}],
+          ['gotrix-halo',{'line-color':'#ffcc00','line-width':17,'line-opacity':.27,'line-blur':5}],
           ['gotrix-borda',{'line-color':'#25221c','line-width':10}],
-          ['gotrix-trajeto',{'line-color':'#f9d34f','line-width':6}]
+          ['gotrix-trajeto',{'line-color':'#ffcc00','line-width':6}]
         ]) {
           cena.addLayer({id,type:'line',source:'gotrix-rota',layout:{'line-join':'round','line-cap':'round'},paint});
         }
@@ -1699,7 +1712,7 @@
       linhaRota?.remove();
       linhaRota = L.layerGroup([
         L.geoJSON(rota.geometry,{style:{color:'#202329',weight:11,interactive:false}}),
-        L.geoJSON(rota.geometry,{style:{color:'#f9d34f',weight:6,className:'rota-luz',interactive:false}})
+        L.geoJSON(rota.geometry,{style:{color:'#ffcc00',weight:6,className:'rota-luz',interactive:false}})
       ]).addTo(map);
       document.getElementById('cockpit-rota').classList.remove('hidden');
       document.getElementById('busca-cockpit').classList.add('hidden');
