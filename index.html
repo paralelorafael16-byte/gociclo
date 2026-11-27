@@ -87,6 +87,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 
@@ -155,11 +156,11 @@
     .cockpit-metrics strong { display: block; font-size: clamp(.93rem,4vw,1.35rem); white-space: nowrap; font-variant-numeric: tabular-nums; }
     .cockpit-controls { position: fixed; z-index: 900; right: max(12px, calc((100vw - 540px)/2)); top: 158px; display: grid; gap: 8px; }
     .cockpit-controls button { box-shadow: 0 5px 15px #0009; }
-    #map-viewport { perspective: 930px; }
-    #map { transform: translate(-50%, -50%) rotateX(var(--pitch, 0deg)) rotateZ(var(--bearing, 0deg)) scale(var(--map-scale, 1)); }
-    body.perspectiva #map { width: 150vmax; height: 150vmax; --pitch: 46deg; --map-scale: 1.42; }
-    body.perspectiva #map-viewport { pointer-events: none; }
-    body.perspectiva::after { content: ''; position: fixed; z-index: 2; inset: 0; pointer-events: none; background: linear-gradient(180deg,#0b0d11bb,transparent 42%,transparent 67%,#0b0d11aa); }
+    #map3d {position:absolute;inset:0;visibility:hidden;background:#171e23}
+    body.perspectiva #map3d {visibility:visible}
+    body.perspectiva #map {visibility:hidden}
+    .veiculo-3d {width:28px;height:36px;filter:drop-shadow(0 2px 4px #10151c)}
+    .veiculo-3d::after {content:"";display:block;width:100%;height:100%;background:linear-gradient(100deg,#fff6c6 48%,#ffc139 49%);clip-path:polygon(50% 0,94% 95%,50% 76%,6% 95%)}
     .cockpit-panel::before { content: ''; pointer-events: none; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(115deg,#ffe59e19,transparent 22%,transparent 80%,#ffe59e0b); }
     .cockpit-top .cockpit-panel { position: relative; }
     .cockpit-brand b { box-shadow: inset 0 1px 1px #fff9, 0 0 12px #f6ca5544; }
@@ -173,6 +174,19 @@
     #painel-etapas { bottom: 25px; }
     .hidden { display: none !important; }
     @media(prefers-reduced-motion: reduce) { #map, .scooter-wrapper { transition: none; } }
+    .cockpit-panel {border-radius:8px 20px 8px 20px;background:linear-gradient(130deg,#262b30f5,#0c1015f5 65%);border:1px solid #535960;box-shadow:inset 0 1px #ffffff20,0 10px 32px #06090e99}
+    .cockpit-top .cockpit-panel {border-left:4px solid #ffd04a;padding:12px 16px}
+    .cockpit-brand {margin-right:auto;font-style:italic;letter-spacing:.01em;font-size:1.12rem}
+    .cockpit-brand b {background:#ffd04a;color:#0a0d11;clip-path:polygon(16% 0,100% 0,88% 100%,0 100%);border-radius:0}
+    .cockpit-button {border-radius:5px 10px;font-family:inherit}
+    .cockpit-search {background:linear-gradient(100deg,#30363e,#1b2229);border-left:2px solid #ffd04a}
+    .cockpit-metrics div {border-radius:4px;background:linear-gradient(135deg,#272d31,#13181d);border-top:2px solid #707780}
+    .cockpit-metrics div:first-child {border-top-color:#ffd04a}
+    .cockpit-metrics strong {font-family:ui-monospace,monospace;letter-spacing:-.05em;color:#fff4d0}
+    .cockpit-label {letter-spacing:.09em}
+    .cockpit-status {color:#c6cdd3}
+    #map3d .maplibregl-ctrl-attrib {margin-bottom:19px}
+    @media(min-width:840px){.cockpit{left:24px;transform:none;width:390px}.cockpit-controls{right:24px;top:20px}.cockpit-top{top:20px}.cockpit-bottom{bottom:24px}}
   </style>
 </head>
 <body class="text-white select-none">
@@ -199,7 +213,7 @@
   </header>
   <div class="cockpit-controls">
     <button class="cockpit-button" id="btn-recentralizar" onclick="recentralizarUsuario()" aria-label="Ativar GPS">Ativar GPS</button>
-    <button class="cockpit-button hidden" id="btn-vista" onclick="alternarPerspectiva()" aria-pressed="false">3D</button>
+    <button class="cockpit-button" id="btn-vista" onclick="alternarPerspectiva()" aria-pressed="false">3D</button>
     <span id="badge-recentralizar" class="hidden"></span>
   </div>
 
@@ -391,6 +405,7 @@
   <div class="map-credit"><span id="mapa-rede" role="status"></span> <button hidden id="mapa-tentar" onclick="carregarMapa(0)">Tentar novamente</button> <a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> <span hidden id="credito-ciclo">· <a href="https://www.cyclosm.org/">CyclOSM</a></span></div>
   <div id="map-viewport">
     <div id="map" class="mapa-escuro"></div>
+    <div id="map3d" aria-label="Mapa tridimensional"></div>
   </div>
 
   <script>
@@ -925,7 +940,7 @@
       window.speechSynthesis?.cancel();
       document.getElementById('cockpit-rota').classList.add('hidden');
       document.getElementById('manobra-cockpit').classList.add('hidden');
-      document.getElementById('btn-vista').classList.add('hidden');
+      document.getElementById('btn-vista').classList.remove('hidden');
       document.getElementById('busca-cockpit').classList.remove('hidden');
       atualizarIndicadorBateriaVertical();
       definirStatus(gpsPronto ? 'GPS disponível' : 'GPS indisponível · informe a origem');
@@ -950,6 +965,7 @@
         iniciarGPS();
         return;
       }
+      sincronizarCena();
       map.flyTo(posAtual, 17, { duration: 0.6 });
       aplicarOrientacaoMapa(anguloAtual);
     }
@@ -1103,18 +1119,95 @@
       return el.innerHTML;
     }
 
-    function aplicarPerspectiva(ativa) {
-      perspectiva = ativa;
-      document.body.classList.toggle('perspectiva', ativa);
-      map.invalidateSize({ pan: false });
-      const botao = document.getElementById('btn-vista');
-      botao.textContent = ativa ? '2D' : '3D';
-      botao.setAttribute('aria-pressed', String(ativa));
-      aplicarOrientacaoMapa(anguloAtual);
+    let cena3d, seta3d, biblioteca3d, rotaExibida;
+    let pedidoVista = 0;
+    const vazio3d = {type:'FeatureCollection',features:[]};
+    function carregarMotor3d() {
+      if (window.maplibregl) return Promise.resolve(window.maplibregl);
+      if (!biblioteca3d) biblioteca3d = new Promise((resolve,reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
+        script.onload = () => resolve(window.maplibregl);
+        script.onerror = () => { biblioteca3d = null; script.remove(); reject(Error('Motor 3D indisponível')); };
+        document.head.append(script);
+      });
+      return biblioteca3d;
     }
-
+    function sincronizarCena(mover = true) {
+      if (!perspectiva || !cena3d) return;
+      const linha = cena3d.getSource('gotrix-rota');
+      if (linha && rotaExibida !== ultimaRotaDados) {
+        linha.setData(ultimaRotaDados?.geometry || vazio3d);
+        rotaExibida = ultimaRotaDados;
+      }
+      if (!gpsPronto) return;
+      const centro = [posAtual[1],posAtual[0]];
+      if (!seta3d) {
+        const el = document.createElement('div');
+        el.className = 'veiculo-3d';
+        seta3d = new maplibregl.Marker({element:el,rotationAlignment:'map'}).setLngLat(centro).addTo(cena3d);
+      }
+      seta3d.setLngLat(centro).setRotation(anguloAtual);
+      if (mover && seguirUsuario) cena3d.easeTo({center:centro,bearing:modoBussolaAtivo ? anguloAtual : 0,duration:350});
+    }
+    async function aplicarPerspectiva(ativa) {
+      const pedido = ++pedidoVista;
+      const botao = document.getElementById('btn-vista');
+      if (!ativa) {
+        perspectiva = false;
+        document.body.classList.remove('perspectiva');
+        botao.textContent = '3D';
+        botao.setAttribute('aria-pressed','false');
+        map.invalidateSize({pan:false});
+        aplicarOrientacaoMapa(anguloAtual);
+        return;
+      }
+      botao.textContent = 'Abrindo 3D…';
+      try {
+        const motor = await carregarMotor3d();
+        if (pedido !== pedidoVista) return;
+        if (!cena3d) {
+          const centro = map.getCenter();
+          cena3d = new motor.Map({container:'map3d',style:'https://tiles.openfreemap.org/styles/liberty',center:[centro.lng,centro.lat],zoom:16.5,pitch:48,maxPitch:65,attributionControl:true});
+          const cena = cena3d;
+          cena.on('dragstart', () => { seguirUsuario = false; });
+          cena.on('click', e => { if (!emNavegacao) map.fire('click',{latlng:L.latLng(e.lngLat.lat,e.lngLat.lng)}); });
+          await new Promise((resolve,reject) => {
+            const prazo = setTimeout(() => reject(Error('Mapa vetorial indisponível')),15000);
+            cena.once('load', () => {clearTimeout(prazo);resolve();});
+          });
+          const edificios = cena.getStyle().layers.filter(layer => layer.type === 'fill-extrusion');
+          if (!edificios.length) {
+            const base = cena.getStyle().layers.find(layer => layer['source-layer'] === 'building');
+            if (base) cena.addLayer({id:'gotrix-edificios',type:'fill-extrusion',source:base.source,'source-layer':'building',minzoom:14,
+              paint:{'fill-extrusion-color':'#8799a5','fill-extrusion-height':['to-number',['get','render_height'],5],
+                'fill-extrusion-base':['to-number',['get','render_min_height'],0],'fill-extrusion-opacity':0.88}});
+          } else {
+            for (const layer of edificios) cena.setPaintProperty(layer.id,'fill-extrusion-color','#93a4af');
+          }
+          cena.addSource('gotrix-rota',{type:'geojson',data:vazio3d});
+          cena.addLayer({id:'gotrix-borda',type:'line',source:'gotrix-rota',paint:{'line-color':'#292116','line-width':10}});
+          cena.addLayer({id:'gotrix-trajeto',type:'line',source:'gotrix-rota',paint:{'line-color':'#ffca33','line-width':6}});
+        }
+        if (pedido !== pedidoVista) return;
+        const c = map.getCenter();
+        cena3d.jumpTo({center:gpsPronto && seguirUsuario ? [posAtual[1],posAtual[0]] : [c.lng,c.lat],zoom:16.5,pitch:48,bearing:modoBussolaAtivo ? anguloAtual : 0});
+        perspectiva = true;
+        document.body.classList.add('perspectiva');
+        cena3d.resize();
+        sincronizarCena(false);
+        botao.textContent = '2D';
+        botao.setAttribute('aria-pressed','true');
+      } catch {
+        cena3d?.remove(); cena3d = seta3d = undefined; rotaExibida = undefined;
+        if (pedido !== pedidoVista) return;
+        aplicarPerspectiva(false);
+        definirStatus('3D indisponível neste dispositivo ou conexão. Mapa 2D ativo.');
+      }
+    }
     function alternarPerspectiva() {
-      if (emNavegacao) aplicarPerspectiva(!perspectiva);
+      if (document.getElementById('btn-vista').textContent === 'Abrindo 3D…') return;
+      aplicarPerspectiva(!perspectiva);
     }
 
     function atualizarMetricasRota(distanciaMetros) {
@@ -1195,6 +1288,7 @@
         if (velocidadeAtual > 2 && Number.isFinite(heading)) aplicarOrientacaoMapa(heading);
         else if (posAnterior && velocidadeAtual > 2) aplicarOrientacaoMapa(calcularDirecao(...posAnterior, ...posAtual));
         posAnterior = novaPosicao;
+        sincronizarCena();
         if (seguirUsuario && !ultimaRotaDados) {
           map.setView(posAtual, primeira ? 15 : map.getZoom(), { animate: false });
         } else if (emNavegacao) {
@@ -1417,9 +1511,11 @@
         btn.classList.toggle('cockpit-primary', perfil === modo);
         btn.setAttribute('aria-pressed', String(perfil === modo));
       }
+      sincronizarCena(false);
       mostrarCobertura(rota);
       campo('btn-iniciar').textContent = destinoRota?.origemManual ? 'Iniciar daqui' : 'Iniciar navegação';
       if (!emNavegacao) {
+        aplicarPerspectiva(false);
         // Leaflet's viewport extends outside the physical screen in cockpit mode.
         const larguraExtra = (map.getSize().x - window.innerWidth) / 2;
         const alturaExtra = (map.getSize().y - window.innerHeight) / 2;
