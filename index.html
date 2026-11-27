@@ -90,7 +90,6 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
@@ -125,21 +124,19 @@
     input, select { min-height: 48px; max-width: 100%; color-scheme: dark }
     [hidden], .hidden { display: none !important }
     #map-viewport { position: fixed; inset: 0; overflow: hidden; z-index: 1 }
-    #map, #map3d { position: absolute; inset: 0; background: #182229 }
-    #map3d, body.perspectiva #map { visibility: hidden }
-    body.perspectiva #map3d { visibility: visible }
+    #map { position: absolute; inset: 0; background: #182229 }
     .mapa-escuro .leaflet-tile-pane {
       filter: invert(100%) hue-rotate(175deg) saturate(68%) brightness(.79) contrast(1.1);
     }
     .rota-luz { filter: drop-shadow(0 0 4px #ffcc0088) }
     .cursor-navegacao { display: grid; place-items: center }
-    .scooter-wrapper, .veiculo-3d {
+    .scooter-wrapper {
       position: relative;
       width: 34px;
       height: 42px;
       filter: drop-shadow(0 3px 3px #0a0f17) drop-shadow(0 0 9px #f5d75aa1);
     }
-    .scooter-wrapper::after, .veiculo-3d::after {
+    .scooter-wrapper::after {
       content: "";
       position: absolute;
       inset: 0;
@@ -296,7 +293,6 @@
       align-items: end;
     }
     .cockpit-controls button { min-width: 46px; padding-inline: 9px }
-    #btn-vista[aria-pressed="true"] { color: var(--gold); border-color: #ffcc008c }
     #btn-recentralizar[data-localizado="true"] { font-size: 1.4rem }
     #btn-recentralizar[data-seguir="false"] { color: var(--gold) }
     .map-credit {
@@ -310,8 +306,18 @@
       font-size: 10px;
     }
     .leaflet-container .leaflet-control-attribution { display: none }
-    body.perspectiva .map-credit { display: none }
-    #map3d .maplibregl-ctrl-bottom-right { right: var(--dir); bottom: env(safe-area-inset-bottom) }
+    #mostrar-controles {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 940;
+      background: transparent;
+    }
+    body.mapa-livre .cockpit, body.mapa-livre .cockpit-controls {
+      visibility: hidden;
+      pointer-events: none;
+    }
     #modal-busca, #painel-config, #painel-etapas {
       z-index: 1100;
       top: auto;
@@ -384,7 +390,6 @@
     <p class="cockpit-status" id="gps-status" role="status">Solicitando sua localização…</p>
   </header>
   <div class="cockpit-controls">
-    <button type="button" class="cockpit-button" id="btn-vista" onclick="alternarPerspectiva()" aria-pressed="false">3D</button>
     <button type="button" class="cockpit-button" id="btn-recentralizar" onclick="recentralizarUsuario()" aria-label="Ativar GPS">Ativar GPS</button>
   </div>
   <div class="cockpit cockpit-panel cockpit-bottom" id="busca-cockpit">
@@ -392,6 +397,7 @@
       <span class="icone-busca" aria-hidden="true"></span>Para onde vamos?
     </button>
   </div>
+  <button type="button" id="mostrar-controles" onclick="mostrarControles()" aria-label="Mostrar controles de navegação" hidden></button>
   <button type="button" id="fundo-painel" onclick="fecharPaineis()" aria-label="Fechar painel" hidden></button>
 
   <!-- MENU DE CONFIGURAÇÕES RECOLHÍVEL -->
@@ -574,15 +580,16 @@
       <div><span class="cockpit-label">Carga na chegada</span><strong id="badge-relevo">—</strong></div>
     </div>
     <p id="aviso-bateria" class="text-xs text-yellow-200" role="status"></p>
+    <p id="aviso-voz" class="cockpit-status" role="status" hidden></p>
     <div class="cockpit-row acoes-rota mt-2">
       <button class="cockpit-button" onclick="toggleResumoRota()">Etapas</button>
+      <button id="btn-ouvir" class="cockpit-button hidden" onclick="repetirInstrucao()" aria-label="Ouvir instrução de navegação">Ouvir</button>
       <button id="btn-iniciar" class="cockpit-button cockpit-primary" onclick="iniciarNavegacao()">Iniciar navegação</button>
     </div>
   </section>
   <div class="map-credit"><span id="mapa-rede" role="status"></span> <button hidden id="mapa-tentar" onclick="carregarMapa(0)">Tentar novamente</button> <a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a> <span hidden id="credito-ciclo">· <a href="https://www.cyclosm.org/">CyclOSM</a></span></div>
   <div id="map-viewport">
     <div id="map" class="mapa-escuro"></div>
-    <div id="map3d" aria-label="Mapa tridimensional"></div>
   </div>
 
   <script id="codigo-aplicativo" type="text/plain">
@@ -592,7 +599,6 @@
     let posicaoAproximada = null;
     let esperaGPS;
     let emNavegacao = false;
-    let perspectiva = false;
     let velocidadeAtual = null;
     let veiculo = localStorageSeguro('gotrix_veiculo') === 'scooter' ? 'scooter' : 'bike';
     let alcanceKm = Number(localStorageSeguro('gotrix_alcance_' + veiculo)) || null;
@@ -617,6 +623,8 @@
       const status = document.getElementById('gps-status');
       status.textContent = mensagem;
       status.dataset.estado = gpsPronto && ['GPS disponível','Navegação em andamento','Trajeto atualizado'].includes(mensagem) ? 'pronto' : '';
+      if (status.dataset.estado === 'pronto') agendarRecolhimento();
+      else mostrarControles();
     }
 
     let anguloAtual = 0;
@@ -628,6 +636,11 @@
     let mapaEscuroAtivo = true;
     let modoBussolaAtivo = true;
     let seguirUsuario = true;
+    let chegouAoDestino = false;
+    let rotaEmCalculo = null;
+    let prazoControles;
+    const inatividadeControles = 6000;
+    const toquesEmAndamento = new Set();
     let cargaAtualPct = 100;
 
     let manterTelaAtiva = false;
@@ -638,6 +651,8 @@
     let chaveVozSelecionada = '';
     let estiloFalaSelecionado = 'padrao';
     let vozesDisponiveis = [];
+    let falaAtual = null;
+    let instrucaoAtual = '';
     let ultimaFalaTexto = '';
     let ultimoTempoFala = 0;
 
@@ -850,41 +865,73 @@
              null;
     }
 
+    function mostrarErroVoz(codigo) {
+      const aviso = document.getElementById('aviso-voz');
+      const diagnostico = document.getElementById('info-voz-diagnostico');
+      const mensagens = {
+        'not-allowed': 'Áudio bloqueado pelo navegador. Toque em Ouvir para tentar novamente.',
+        'voice-unavailable': 'A voz escolhida está indisponível. Selecione outra voz em Configurações.',
+        'language-unavailable': 'Voz em português indisponível. Confira as vozes do aparelho.',
+        'audio-busy': 'O áudio está ocupado. Toque em Ouvir para tentar novamente.',
+        'unsupported': 'Este navegador não oferece instruções por voz.'
+      };
+      aviso.textContent = mensagens[codigo] || 'O aparelho não conseguiu tocar a instrução.';
+      diagnostico.textContent = aviso.textContent;
+      aviso.hidden = false;
+      mostrarControles();
+    }
+
     function falarInstrucao(texto, forcar = false) {
-      if (!vozAtiva || !('speechSynthesis' in window)) return;
-      if (!texto || !texto.trim()) return;
-
-      const agora = Date.now();
-      if (!forcar && texto === ultimaFalaTexto && (agora - ultimoTempoFala) < 12000) {
-        return;
+      if (!vozAtiva || !texto?.trim()) return false;
+      const motor = window.speechSynthesis;
+      if (!motor || !window.SpeechSynthesisUtterance) {
+        if (forcar) mostrarErroVoz('unsupported');
+        return false;
       }
-
-      ultimaFalaTexto = texto;
-      ultimoTempoFala = agora;
+      const agora = Date.now();
+      if (!forcar && texto === ultimaFalaTexto && agora - ultimoTempoFala < 12000) return false;
 
       try {
-        window.speechSynthesis.cancel();
-        setTimeout(() => {
-          if (!vozAtiva) return;
-          const utterance = new SpeechSynthesisUtterance(texto);
-          const vozEscolhida = obterVozEscolhida();
-          const params = obterParametrosEstiloFala();
+        if (motor.speaking || motor.pending) motor.cancel();
+        if (motor.paused) motor.resume();
+        const fala = new SpeechSynthesisUtterance(texto);
+        const voz = obterVozEscolhida();
+        const params = obterParametrosEstiloFala();
+        if (voz) fala.voice = voz;
+        fala.lang = voz?.lang || 'pt-BR';
+        fala.rate = params.rate;
+        fala.pitch = params.pitch;
+        fala.volume = 1;
+        fala.onstart = () => {
+          if (fala === falaAtual) document.getElementById('aviso-voz').hidden = true;
+        };
+        fala.onend = () => {
+          if (fala === falaAtual) falaAtual = null;
+        };
+        fala.onerror = evento => {
+          if (fala !== falaAtual) return;
+          falaAtual = null;
+          ultimaFalaTexto = '';
+          if (evento.error !== 'interrupted' && evento.error !== 'canceled') mostrarErroVoz(evento.error);
+        };
+        falaAtual = fala;
+        ultimaFalaTexto = texto;
+        ultimoTempoFala = agora;
+        motor.speak(fala);
+        return true;
+      } catch {
+        falaAtual = null;
+        ultimaFalaTexto = '';
+        mostrarErroVoz();
+        return false;
+      }
+    }
 
-          if (vozEscolhida) {
-            utterance.voice = vozEscolhida;
-            utterance.lang = vozEscolhida.lang || 'pt-BR';
-          } else {
-            utterance.lang = 'pt-BR';
-          }
-
-          utterance.rate = params.rate;
-          utterance.pitch = params.pitch;
-          utterance.volume = 1.0;
-
-          window.speechSynthesis.resume?.();
-          window.speechSynthesis.speak(utterance);
-        }, 60);
-      } catch (e) {}
+    function repetirInstrucao() {
+      vozAtiva = true;
+      atualizarVisualBotaoVoz();
+      salvarPreferencias();
+      falarInstrucao(instrucaoAtual || 'Siga a rota indicada no mapa.', true);
     }
 
     function atualizarIndicadorBateriaVertical() {
@@ -992,12 +1039,10 @@
     }
 
     function focarEtapaNoMapa(lat, lng) {
-      seguirUsuario = false;
-      document.getElementById('btn-recentralizar').dataset.seguir = 'false';
+      pausarAcompanhamento();
 
       fecharResumoRota();
       map.flyTo([lat, lng], 18, { duration: 0.5 });
-      if (perspectiva) cena3d.easeTo({center:[lng,lat],zoom:17,duration:400});
     }
 
     function renderizarListaEtapas() {
@@ -1116,34 +1161,84 @@
       rotas = {};
       distanciaPercorridaAntesDoDesvio = 0;
       emNavegacao = false;
-      aplicarPerspectiva(false);
+      chegouAoDestino = false;
+      instrucaoAtual = '';
+      ultimaFalaTexto = '';
+      document.getElementById('aviso-voz').hidden = true;
+      document.getElementById('btn-ouvir').classList.add('hidden');
+      mostrarControles();
       fecharResumoRota();
       window.speechSynthesis?.cancel();
       document.getElementById('cockpit-rota').classList.add('hidden');
       document.getElementById('manobra-cockpit').classList.add('hidden');
-      document.getElementById('btn-vista').classList.remove('hidden');
       document.getElementById('busca-cockpit').classList.remove('hidden');
       atualizarIndicadorBateriaVertical();
       definirStatus(gpsPronto ? 'GPS disponível' : 'GPS indisponível · informe a origem');
     }
 
-    map.on('dragstart', () => {
+    map.on('dragstart', pausarAcompanhamento);
+    map.on('zoomstart', () => {
+      if (toquesEmAndamento.size) pausarAcompanhamento();
+    });
+
+    function pausarAcompanhamento() {
       seguirUsuario = false;
       document.getElementById('btn-recentralizar').dataset.seguir = 'false';
-    });
+      agendarRecolhimento();
+    }
+
+    function acompanharIndicador(zoom = map.getZoom()) {
+      if (gpsPronto && seguirUsuario) map.setView(posAtual, zoom, {animate:false});
+    }
 
     function recentralizarUsuario() {
       seguirUsuario = true;
       document.getElementById('btn-recentralizar').dataset.seguir = 'true';
-
       if (!gpsPronto) {
         iniciarGPS();
         return;
       }
-      sincronizarCena();
-      map.flyTo(posAtual, 17, { duration: 0.6 });
+      acompanharIndicador(Math.max(16,map.getZoom()));
       aplicarOrientacaoMapa(anguloAtual);
     }
+
+    function agendarRecolhimento() {
+      clearTimeout(prazoControles);
+      const painelAberto = !document.getElementById('fundo-painel').hidden;
+      const previa = !emNavegacao && (ultimaRotaDados || rotaEmCalculo !== null);
+      if (!gpsPronto || painelAberto || previa || chegouAoDestino || toquesEmAndamento.size) return;
+      if (document.body.classList.contains('mapa-livre')) return;
+      prazoControles = setTimeout(() => {
+        document.body.classList.add('mapa-livre');
+        document.getElementById('mostrar-controles').hidden = false;
+        seguirUsuario = true;
+        document.getElementById('btn-recentralizar').dataset.seguir = 'true';
+        acompanharIndicador();
+      },inatividadeControles);
+    }
+
+    function mostrarControles() {
+      document.body.classList.remove('mapa-livre');
+      document.getElementById('mostrar-controles').hidden = true;
+      agendarRecolhimento();
+    }
+
+    function encerrarToque(evento) {
+      toquesEmAndamento.delete(evento.pointerId);
+      agendarRecolhimento();
+    }
+
+    window.addEventListener('pointerdown', evento => {
+      toquesEmAndamento.add(evento.pointerId);
+      clearTimeout(prazoControles);
+    },true);
+    window.addEventListener('pointerup', encerrarToque, true);
+    window.addEventListener('pointercancel', encerrarToque, true);
+    window.addEventListener('blur', () => {
+      toquesEmAndamento.clear();
+      agendarRecolhimento();
+    });
+    window.addEventListener('keydown', agendarRecolhimento);
 
     async function alternarModoBussola() {
       modoBussolaAtivo = !modoBussolaAtivo;
@@ -1212,7 +1307,10 @@
 
     const paineis = ['modal-busca','painel-config','painel-etapas'];
     function atualizarFundoPainel() {
-      document.getElementById('fundo-painel').hidden = paineis.every(id => document.getElementById(id).classList.contains('hidden'));
+      const fechado = paineis.every(id => document.getElementById(id).classList.contains('hidden'));
+      document.getElementById('fundo-painel').hidden = fechado;
+      if (fechado) agendarRecolhimento();
+      else mostrarControles();
     }
 
     function fecharPaineis() {
@@ -1275,148 +1373,6 @@
       const el = document.createElement('span');
       el.textContent = valor ?? '';
       return el.innerHTML;
-    }
-
-    let cena3d, seta3d, biblioteca3d, cenaCarregando, rotaExibida;
-    let pedidoVista = 0;
-    const vazio3d = {type:'FeatureCollection',features:[]};
-    function carregarMotor3d() {
-      if (window.maplibregl) return Promise.resolve(window.maplibregl);
-      if (!biblioteca3d) biblioteca3d = new Promise((resolve,reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
-        script.onload = () => resolve(window.maplibregl);
-        script.onerror = () => { biblioteca3d = null; script.remove(); reject(Error('Motor 3D indisponível')); };
-        document.head.append(script);
-      });
-      return biblioteca3d;
-    }
-    function sincronizarCena(mover = true) {
-      if (!perspectiva || !cena3d) return;
-      const linha = cena3d.getSource('gotrix-rota');
-      if (linha && rotaExibida !== ultimaRotaDados) {
-        linha.setData(ultimaRotaDados?.geometry || vazio3d);
-        rotaExibida = ultimaRotaDados;
-      }
-      if (!gpsPronto) return;
-      const centro = [posAtual[1],posAtual[0]];
-      if (!seta3d) {
-        const el = document.createElement('div');
-        el.className = 'veiculo-3d';
-        seta3d = new maplibregl.Marker({element:el,rotationAlignment:'map'}).setLngLat(centro).addTo(cena3d);
-      }
-      seta3d.setLngLat(centro).setRotation(anguloAtual);
-      if (mover && seguirUsuario) {
-        cena3d.easeTo({center:centro,bearing:modoBussolaAtivo ? anguloAtual : 0,padding:enquadramento3d(),duration:320});
-      }
-    }
-    function enquadramento3d() {
-      if (!emNavegacao) return {top:0,bottom:0,left:0,right:0};
-      const largura = window.innerWidth;
-      const cabecalho = document.querySelector('.cockpit-top').getBoundingClientRect();
-      const dock = document.getElementById('cockpit-rota').getBoundingClientRect();
-      if (matchMedia('(orientation: landscape) and (min-width: 540px)').matches) {
-        return {top:Math.round(window.innerHeight * .23),bottom:0,left:Math.min(dock.right + 10,largura * .55),right:0};
-      }
-      return {
-        top:Math.min(window.innerHeight * .54, Math.max(cabecalho.bottom,dock.height + 78)),
-        bottom:Math.min(window.innerHeight * .32,window.innerHeight - dock.top),
-        left:0,right:0
-      };
-    }
-
-    async function inicializarCena() {
-      const motor = await carregarMotor3d();
-      const centro = map.getCenter();
-      const cena = new motor.Map({
-        container:'map3d',style:'https://tiles.openfreemap.org/styles/liberty',
-        center:[centro.lng,centro.lat],zoom:16.5,pitch:50,maxPitch:65,attributionControl:true
-      });
-      try {
-        await new Promise((resolve,reject) => {
-          const prazo = setTimeout(() => reject(Error('Mapa vetorial indisponível')),15000);
-          cena.once('load', () => { clearTimeout(prazo); resolve(); });
-        });
-        const camadas = cena.getStyle().layers;
-        const edificios = camadas.filter(layer => layer.type === 'fill-extrusion');
-        if (edificios.length) {
-          for (const layer of edificios) cena.setPaintProperty(layer.id,'fill-extrusion-color','#8096a3');
-        } else {
-          const base = camadas.find(layer => layer['source-layer'] === 'building');
-          if (base) cena.addLayer({
-            id:'gotrix-edificios',type:'fill-extrusion',source:base.source,'source-layer':'building',minzoom:14,
-            paint:{
-              'fill-extrusion-color':'#8096a3',
-              'fill-extrusion-height':['to-number',['get','render_height'],5],
-              'fill-extrusion-base':['to-number',['get','render_min_height'],0],
-              'fill-extrusion-opacity':0.88
-            }
-          });
-        }
-        cena.addSource('gotrix-rota',{type:'geojson',data:vazio3d});
-        for (const [id,paint] of [
-          ['gotrix-halo',{'line-color':'#ffcc00','line-width':17,'line-opacity':.27,'line-blur':5}],
-          ['gotrix-borda',{'line-color':'#25221c','line-width':10}],
-          ['gotrix-trajeto',{'line-color':'#ffcc00','line-width':6}]
-        ]) {
-          cena.addLayer({id,type:'line',source:'gotrix-rota',layout:{'line-join':'round','line-cap':'round'},paint});
-        }
-        cena.on('dragstart', () => {
-          seguirUsuario = false;
-          document.getElementById('btn-recentralizar').dataset.seguir = 'false';
-        });
-        cena.on('click', e => {
-          if (!emNavegacao) map.fire('click',{latlng:L.latLng(e.lngLat.lat,e.lngLat.lng)});
-        });
-        return cena;
-      } catch (erro) {
-        cena.remove();
-        throw erro;
-      }
-    }
-
-    async function aplicarPerspectiva(ativa) {
-      const pedido = ++pedidoVista;
-      const botao = document.getElementById('btn-vista');
-      if (!ativa) {
-        perspectiva = false;
-        document.body.classList.remove('perspectiva');
-        botao.textContent = '3D';
-        botao.setAttribute('aria-pressed','false');
-        map.invalidateSize({pan:false});
-        aplicarOrientacaoMapa(anguloAtual);
-        return;
-      }
-      botao.textContent = 'Abrindo 3D…';
-      try {
-        cenaCarregando ??= inicializarCena().catch(erro => {
-          cenaCarregando = undefined;
-          throw erro;
-        });
-        const cena = await cenaCarregando;
-        if (pedido !== pedidoVista) return;
-        cena3d = cena;
-        const centro = map.getCenter();
-        cena.jumpTo({
-          center:gpsPronto && seguirUsuario ? [posAtual[1],posAtual[0]] : [centro.lng,centro.lat],
-          zoom:emNavegacao ? 17 : 16.5,pitch:50,bearing:modoBussolaAtivo ? anguloAtual : 0,
-          padding:enquadramento3d()
-        });
-        perspectiva = true;
-        document.body.classList.add('perspectiva');
-        cena.resize();
-        sincronizarCena(false);
-        botao.textContent = '2D';
-        botao.setAttribute('aria-pressed','true');
-      } catch {
-        if (pedido !== pedidoVista) return;
-        aplicarPerspectiva(false);
-        definirStatus('3D indisponível neste dispositivo ou conexão. Mapa 2D ativo.');
-      }
-    }
-    function alternarPerspectiva() {
-      if (document.getElementById('btn-vista').textContent === 'Abrindo 3D…') return;
-      aplicarPerspectiva(!perspectiva);
     }
 
     function atualizarMetricasRota(distanciaMetros) {
@@ -1499,13 +1455,8 @@
         if (velocidadeAtual > 2 && Number.isFinite(heading)) aplicarOrientacaoMapa(heading);
         else if (posAnterior && velocidadeAtual > 2) aplicarOrientacaoMapa(calcularDirecao(...posAnterior, ...posAtual));
         posAnterior = novaPosicao;
-        sincronizarCena();
-        if (seguirUsuario && !ultimaRotaDados) {
-          map.setView(posAtual, primeira ? 15 : map.getZoom(), { animate: false });
-        } else if (emNavegacao) {
-          if (seguirUsuario) map.setView(posAtual, map.getZoom(), { animate: false });
-          acompanharRota(accuracy);
-        }
+        if (emNavegacao || !ultimaRotaDados) acompanharIndicador(primeira && !emNavegacao ? 15 : map.getZoom());
+        if (emNavegacao) acompanharRota(accuracy);
         if (primeira) definirStatus(emNavegacao ? 'Navegação em andamento' : 'GPS disponível');
       }
       try {
@@ -1674,6 +1625,7 @@
 
     async function calcularRotas(origem, destino, recalculo = false, origemManual = false) {
       const numero = ++pedidoRota;
+      rotaEmCalculo = numero;
       const modoAnterior = modoRota;
       definirStatus(recalculo ? 'Recalculando trajeto…' : 'Calculando trajeto ciclável…');
       try {
@@ -1698,6 +1650,11 @@
         return true;
       } catch (erro) {
         if (numero === pedidoRota) definirStatus(erro.message || 'Não foi possível calcular o trajeto.');
+      } finally {
+        if (rotaEmCalculo === numero) {
+          rotaEmCalculo = null;
+          agendarRecolhimento();
+        }
       }
     }
 
@@ -1726,12 +1683,10 @@
         btn.classList.toggle('cockpit-primary', perfil === modo);
         btn.setAttribute('aria-pressed', String(perfil === modo));
       }
-      sincronizarCena(false);
       mostrarCobertura(rota);
       campo('btn-iniciar').textContent = destinoRota?.origemManual ? 'Iniciar daqui' : 'Iniciar navegação';
       if (!emNavegacao) {
-        aplicarPerspectiva(false);
-        const painel = document.getElementById('cockpit-rota').getBoundingClientRect();
+          const painel = document.getElementById('cockpit-rota').getBoundingClientRect();
         const cabecalho = document.querySelector('.cockpit-top').getBoundingClientRect();
         const lateral = matchMedia('(orientation: landscape) and (min-width: 540px)').matches;
         const topo = lateral ? 18 : cabecalho.bottom + 12;
@@ -1754,24 +1709,28 @@
       }
       if (!ultimaRotaDados || !destinoRota) return;
       if (destinoRota.origemManual || map.distance(posAtual,destinoRota.partida) > 60) {
+        falarInstrucao('Calculando a rota a partir da sua localização.', true);
         const perfil = modoRota;
         if (!await calcularRotas(posAtual, destinoRota, false, false) || !gpsPronto) return;
         if (perfil === 'curta' && rotas.curta) selecionarRota('curta');
       }
       campo('cobertura').hidden = true;
       emNavegacao = true;
+      chegouAoDestino = false;
+      mostrarControles();
       document.getElementById('manobra-cockpit').classList.remove('hidden');
       document.getElementById('busca-cockpit').classList.add('hidden');
-      document.getElementById('btn-vista').classList.remove('hidden');
       document.getElementById('opcoes-rota').classList.add('hidden');
       document.getElementById('btn-iniciar').classList.add('hidden');
+      document.getElementById('btn-ouvir').classList.remove('hidden');
       document.getElementById('btn-limpar-rota').textContent = 'Encerrar';
       document.getElementById('rotulo-tempo').textContent = 'Velocidade';
       document.getElementById('rotulo-distancia').textContent = 'Restante';
-      aplicarPerspectiva(true);
       recentralizarUsuario();
       definirStatus('Navegação em andamento');
-      acompanharRota(0, false);
+      if (!acompanharRota(0, false, true)) {
+        falarInstrucao('Navegação iniciada. Siga a rota indicada no mapa.', true);
+      }
     }
 
     function medirProgresso(coordenadas, posicao) {
@@ -1795,7 +1754,7 @@
       return { ...melhor, total: acumulado };
     }
 
-    function acompanharRota(precisao, permitirRecalculo = true) {
+    function acompanharRota(precisao, permitirRecalculo = true, anunciarInicio = false) {
       if (!ultimaRotaDados) return;
       const rota = ultimaRotaDados;
       const ajuste = medirProgresso(rota.geometry.coordinates, posAtual);
@@ -1821,18 +1780,38 @@
       const info = descreverManobra(passo);
       const restante = Math.max(0, Math.min(rota.distance, marco) - progressoRota);
       const chegada = passo.maneuver?.type === 'arrive' && rota.distance - progressoRota < 15;
+      const novaChegada = chegada && !chegouAoDestino;
+      if (novaChegada) {
+        chegouAoDestino = true;
+        mostrarControles();
+      }
       document.getElementById('icone-manobra').textContent = chegada ? '✓' : info.seta;
       document.getElementById('distancia-manobra').textContent = chegada ? 'Você chegou' : formatarDistanciaCurta(restante);
       document.getElementById('rua-manobra').textContent = chegada ? destinoRota.nome : [info.acao, info.rua].filter(Boolean).join(' ');
-      if ((chegada || restante <= 100) && indice !== ultimaManobra) {
-        ultimaManobra = indice;
-        if (chegada) falarInstrucao('Você chegou ao destino');
-        else if (passo.maneuver?.type !== 'arrive') falarInstrucao(info.acao + ' ' + info.rua);
-      }
       atualizarMetricasRota(rota.distance);
+
+      if (chegada) {
+        instrucaoAtual = 'Você chegou ao destino.';
+        return novaChegada && falarInstrucao(instrucaoAtual, true);
+      }
+      const distancia = restante >= 1000
+        ? (restante / 1000).toLocaleString('pt-BR', {maximumFractionDigits:1}) + ' quilômetros'
+        : Math.round(restante) + ' metros';
+      const acao = passo.maneuver?.type === 'arrive' ? 'você chegará ao destino' : info.acao + ' ' + info.rua;
+      instrucaoAtual = restante < 12 ? acao : 'Em ' + distancia + ', ' + acao;
+      if (anunciarInicio || (restante <= 100 && indice !== ultimaManobra)) {
+        if (!falarInstrucao(instrucaoAtual, anunciarInicio)) return false;
+        if (restante <= 100) ultimaManobra = indice;
+        return true;
+      }
+      return false;
     }
 
     map.on('click', evento => {
+      if (document.body.classList.contains('mapa-livre')) {
+        mostrarControles();
+        return;
+      }
       if (emNavegacao) return;
       if (!gpsPronto) {
         abrirPainel('destino');
@@ -1869,10 +1848,6 @@
       estilo.setProperty('--controles-base', Math.min(base,window.innerHeight * .47) + 'px');
       estilo.setProperty('--topo-painel', (cabecalho.bottom + 8) + 'px');
       map.invalidateSize({pan:false});
-      if (perspectiva) {
-        cena3d.resize();
-        sincronizarCena();
-      }
     }
     if (window.ResizeObserver) {
       const observadorTela = new ResizeObserver(ajustarTela);
